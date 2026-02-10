@@ -15,16 +15,18 @@ import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.plugins.banktags.BankTagsPlugin;
+import net.runelite.client.plugins.banktags.tabs.TabInterface;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
 
 @Slf4j
+@PluginDependency(BankTagsPlugin.class)
 @PluginDescriptor(
 	name = "Bank Slot Sync",
 	description = "Automatically syncs item variants (recolors, ornament kits) to Bank Tag Layout slots",
@@ -50,6 +52,11 @@ public class BankSlotSyncPlugin extends Plugin
 	@Inject
 	private ItemManager itemManager;
 
+	@Inject
+	private TabInterface tabInterface;
+
+
+
 	private final ItemVariantMapping variantMapping = new ItemVariantMapping();
 
 	// Track bank item IDs to detect changes
@@ -58,11 +65,10 @@ public class BankSlotSyncPlugin extends Plugin
 	// Cache item names for charge variant detection
 	private final Map<Integer, String> itemNameCache = new HashMap<>();
 
-	// Pending items to process (delayed processing to avoid conflicts with Bank Tags)
+	// Pending items to process (1-tick delay to let Bank Tags finish first)
 	private Set<Integer> pendingNewItems = new HashSet<>();
 	private Set<Integer> pendingAllBankItems = new HashSet<>();
-	private int ticksToWait = 0;
-	private static final int PROCESSING_DELAY_TICKS = 2; // Wait 2 game ticks before processing
+	private boolean processPending = false;
 
 	@Override
 	protected void startUp() throws Exception
@@ -79,17 +85,12 @@ public class BankSlotSyncPlugin extends Plugin
 		itemNameCache.clear();
 		pendingNewItems.clear();
 		pendingAllBankItems.clear();
-		ticksToWait = 0;
+		processPending = false;
 	}
 
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (!config.enabled())
-		{
-			return;
-		}
-
 		if (event.getContainerId() != InventoryID.BANK.getId())
 		{
 			return;
@@ -118,19 +119,9 @@ public class BankSlotSyncPlugin extends Plugin
 		if (!newItems.isEmpty())
 		{
 			debugLog("New items detected: {}", newItems);
-
-			// Check if we're in a tag tab view - if so, warn the user
-			if (isInTagTabView())
-			{
-				debugLog("Currently in tag tab view - queueing items for delayed processing");
-				sendChatNotification("Deposit items outside of tag view for best results");
-			}
-
-			// Queue items for delayed processing (gives Bank Tags time to finish)
 			pendingNewItems.addAll(newItems);
 			pendingAllBankItems = new HashSet<>(currentBankItems);
-			ticksToWait = PROCESSING_DELAY_TICKS;
-			debugLog("Queued {} items, will process in {} ticks", newItems.size(), ticksToWait);
+			processPending = true;
 		}
 
 		// Update previous state for next comparison
@@ -140,57 +131,22 @@ public class BankSlotSyncPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		if (!config.enabled() || pendingNewItems.isEmpty())
+		if (!processPending)
 		{
 			return;
 		}
+		processPending = false;
 
-		// Count down the delay
-		if (ticksToWait > 0)
-		{
-			ticksToWait--;
-			debugLog("Waiting {} more ticks before processing", ticksToWait);
-			return;
-		}
-
-		// Process the pending items now
-		debugLog("Processing {} pending items now", pendingNewItems.size());
-
-		// Re-read layouts fresh (Bank Tags may have modified them)
+		debugLog("Processing {} pending items", pendingNewItems.size());
 		processNewItems(new HashSet<>(pendingNewItems), pendingAllBankItems);
-
-		// Clear the pending queue
 		pendingNewItems.clear();
 		pendingAllBankItems.clear();
-	}
 
-	/**
-	 * Check if the user is currently viewing a bank tag tab.
-	 * When in a tag view, Bank Tags is actively managing the layout.
-	 */
-	private boolean isInTagTabView()
-	{
-		try
+		// If a bank tag is currently open, refresh the display
+		if (tabInterface.getActiveTag() != null)
 		{
-			// Check if the bank title widget shows a tag name
-			// Bank Tags changes the title when viewing a tag tab
-			Widget bankTitleBar = client.getWidget(ComponentID.BANK_TITLE_BAR);
-			if (bankTitleBar != null)
-			{
-				String title = bankTitleBar.getText();
-				if (title != null && !title.equals("Bank of RuneScape"))
-				{
-					// Title is something other than default - likely a tag tab
-					debugLog("Bank title: '{}' - appears to be in tag view", title);
-					return true;
-				}
-			}
+			tabInterface.reloadActiveTab();
 		}
-		catch (Exception e)
-		{
-			log.debug("Error checking tag tab view: {}", e.getMessage());
-		}
-		return false;
 	}
 
 	/**
@@ -209,9 +165,9 @@ public class BankSlotSyncPlugin extends Plugin
 
 		for (int newItemId : newItems)
 		{
-			// Check if we should copy/remove tags from a variant
+			// Copy tags from old variant and remove old variant's tags
 			Set<Integer> variantGroup = variantMapping.getVariantGroup(newItemId);
-			if (variantGroup != null && (config.copyTags() || config.removeOldTags()))
+			if (variantGroup != null)
 			{
 				handleVariantTags(newItemId, variantGroup, allBankItems);
 			}
@@ -278,12 +234,11 @@ public class BankSlotSyncPlugin extends Plugin
 				if (allBankItems.contains(existingVariantId))
 				{
 					debugLog("Existing variant {} still in bank", existingVariantId);
-					// In ADJACENT mode, add the new variant next to the old one
-					if (config.layoutMode() == LayoutMode.ADJACENT)
+					if (config.layoutMode() == LayoutMode.ADJACENT
+						|| (config.layoutMode() == LayoutMode.REPLACE && config.adjacentWhenOccupied()))
 					{
 						addVariantAdjacent(tagName, layout, variantPosition, newItemId);
 					}
-					// In REPLACE mode, do nothing - we don't replace if the old item is still there
 					continue;
 				}
 
@@ -476,13 +431,7 @@ public class BankSlotSyncPlugin extends Plugin
 	}
 
 	/**
-	 * Copy tags from one item variant to another, and optionally remove from the old item.
-	 * This ensures the new variant has all the same tags as the old one,
-	 * and the old item's placeholder won't show in tag tabs.
-	 */
-	/**
-	 * Handle tag operations for a variant: copy tags to new item and/or remove from old.
-	 * These operations are independent based on config settings.
+	 * Handle tag operations for a variant: copy tags to new item and remove from old.
 	 */
 	private void handleVariantTags(int newItemId, Set<Integer> variantGroup, Set<Integer> allBankItems)
 	{
@@ -500,18 +449,15 @@ public class BankSlotSyncPlugin extends Plugin
 				// Check if this variant is gone from bank (user swapped it)
 				if (!allBankItems.contains(variantId))
 				{
-					// Copy tags to new item (if enabled)
-					if (config.copyTags())
+					// Copy tags to new item
+					String existingNewTags = getItemTags(newItemId);
+					if (existingNewTags == null || existingNewTags.isEmpty())
 					{
-						String existingNewTags = getItemTags(newItemId);
-						if (existingNewTags == null || existingNewTags.isEmpty())
-						{
-							setItemTags(newItemId, oldTags);
-							log.info("Copied tags '{}' from item {} to item {}", oldTags, variantId, newItemId);
-						}
+						setItemTags(newItemId, oldTags);
+						log.info("Copied tags '{}' from item {} to item {}", oldTags, variantId, newItemId);
 					}
 
-					// Remove tags from old item (if enabled) - independent of copyTags
+					// Remove tags from old item (if enabled)
 					if (config.removeOldTags())
 					{
 						removeItemTags(variantId);
@@ -571,30 +517,9 @@ public class BankSlotSyncPlugin extends Plugin
 		}
 	}
 
-	/**
-	 * Log a debug message if debug logging is enabled.
-	 * Also shows in chat when debug mode is on.
-	 */
 	private void debugLog(String message, Object... args)
 	{
-		if (config.debugLogging())
-		{
-			log.info(message, args);
-			// Also show in chat for easier debugging
-			String formatted = message;
-			for (Object arg : args)
-			{
-				formatted = formatted.replaceFirst("\\{\\}", String.valueOf(arg));
-			}
-			if (client.getGameState().getState() >= 30)
-			{
-				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "[DEBUG] " + formatted, null);
-			}
-		}
-		else
-		{
-			log.debug(message, args);
-		}
+		log.debug(message, args);
 	}
 
 	@Provides

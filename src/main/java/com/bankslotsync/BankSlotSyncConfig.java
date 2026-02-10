@@ -22,19 +22,6 @@ public interface BankSlotSyncConfig extends Config
 	String instructionsSection = "instructions";
 
 	@ConfigItem(
-		keyName = "enabled",
-		name = "Enable Plugin",
-		description = "Enable automatic variant syncing in Bank Tag Layouts. " +
-			"When enabled, acquiring a new item variant will automatically update your tag layouts.",
-		position = 1,
-		section = instructionsSection
-	)
-	default boolean enabled()
-	{
-		return true;
-	}
-
-	@ConfigItem(
 		keyName = "layoutMode",
 		name = "Layout Mode",
 		description = "<html>Where to place the new variant in the layout:" +
@@ -43,25 +30,12 @@ public interface BankSlotSyncConfig extends Config
 			"<br><br>Example: Old item at slot 5" +
 			"<br>• Replace: New item goes to slot 5" +
 			"<br>• Adjacent: New item goes to slot 6, only that row shifts</html>",
-		position = 2,
+		position = 1,
 		section = instructionsSection
 	)
 	default LayoutMode layoutMode()
 	{
 		return LayoutMode.REPLACE;
-	}
-
-	@ConfigItem(
-		keyName = "copyTags",
-		name = "Copy Tags to Variants",
-		description = "When a variant is detected, copy all bank tags from the original item to the new variant. " +
-			"This ensures your new item appears in all the same tag tabs as the original.",
-		position = 3,
-		section = instructionsSection
-	)
-	default boolean copyTags()
-	{
-		return true;
 	}
 
 	@ConfigItem(
@@ -74,12 +48,12 @@ public interface BankSlotSyncConfig extends Config
 			"<br><br><b>OFF:</b>" +
 			"<br>• Old item keeps its tags" +
 			"<br>• Shows as a grayed-out placeholder</html>",
-		position = 4,
+		position = 2,
 		section = instructionsSection
 	)
 	default boolean removeOldTags()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -87,7 +61,7 @@ public interface BankSlotSyncConfig extends Config
 		name = "Show Chat Notifications",
 		description = "Display a chat message when a variant is synced to a layout. " +
 			"Useful for confirming the plugin is working.",
-		position = 5,
+		position = 3,
 		section = instructionsSection
 	)
 	default boolean showNotifications()
@@ -104,6 +78,20 @@ public interface BankSlotSyncConfig extends Config
 	String advancedSection = "advanced";
 
 	@ConfigItem(
+		keyName = "adjacentWhenOccupied",
+		name = "Place Adjacent When Slot Occupied",
+		description = "<html>Only applies when Layout Mode is set to <b>Replace</b>." +
+			"<br><br>When the original item is still in your bank (slot is not a placeholder)," +
+			" place the new variant adjacent instead of doing nothing.</html>",
+		position = 11,
+		section = advancedSection
+	)
+	default boolean adjacentWhenOccupied()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "detectChargeVariants",
 		name = "Detect Charge Variants",
 		description = "<html>Automatically detect items with charges as variants of each other:" +
@@ -111,23 +99,12 @@ public interface BankSlotSyncConfig extends Config
 			"<br>• Barrows degradation: Ahrim's robetop 100 ↔ Ahrim's robetop 0" +
 			"<br>• Trident charges: Trident of the seas (full) ↔ Trident of the seas" +
 			"<br><br>Disable if you want to keep charged/uncharged items in separate positions.</html>",
-		position = 11,
+		position = 12,
 		section = advancedSection
 	)
 	default boolean detectChargeVariants()
 	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "debugLogging",
-		name = "Debug Logging",
-		description = "Enable detailed logging in the RuneLite log file. Useful for troubleshooting.",
-		position = 12,
-		section = advancedSection
-	)
-	default boolean debugLogging()
-	{
 		return false;
 	}
+
 }
