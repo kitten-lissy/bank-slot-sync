@@ -204,7 +204,8 @@ public class ItemVariantMapping
 		// Amulet of fury variants
 		addVariantGroup(
 			6585,   // Amulet of fury
-			12436   // Amulet of fury (or)
+			12436,  // Amulet of fury (or)
+			24780   // Amulet of blood fury
 		);
 
 		// Amulet of torture variants
@@ -548,7 +549,8 @@ public class ItemVariantMapping
 
 		addVariantGroup(
 			4153,   // Granite maul
-			12848   // Granite maul (or)
+			12848,  // Granite maul (or)
+			24225   // Granite maul (ornate handle)
 		);
 
 		// ==================== ODIUM/MALEDICTION WARDS ====================
@@ -575,31 +577,41 @@ public class ItemVariantMapping
 			21198   // Lava battlestaff (or)
 		);
 
-		// ==================== MYSTIC ROBES (Shattered Relics) ====================
+		// ==================== MYSTIC ROBES (All Color Variants) ====================
 
 		addVariantGroup(
-			4089,   // Mystic hat
-			23047   // Mystic hat (or)
+			4089,   // Mystic hat (blue)
+			4099,   // Mystic hat (dark)
+			4109,   // Mystic hat (light)
+			23047   // Mystic hat (dusk/or)
 		);
 
 		addVariantGroup(
-			4091,   // Mystic robe top
-			23050   // Mystic robe top (or)
+			4091,   // Mystic robe top (blue)
+			4101,   // Mystic robe top (dark)
+			4111,   // Mystic robe top (light)
+			23050   // Mystic robe top (dusk/or)
 		);
 
 		addVariantGroup(
-			4093,   // Mystic robe bottom
-			23053   // Mystic robe bottom (or)
+			4093,   // Mystic robe bottom (blue)
+			4103,   // Mystic robe bottom (dark)
+			4113,   // Mystic robe bottom (light)
+			23053   // Mystic robe bottom (dusk/or)
 		);
 
 		addVariantGroup(
-			4095,   // Mystic gloves
-			23056   // Mystic gloves (or)
+			4095,   // Mystic gloves (blue)
+			4105,   // Mystic gloves (dark)
+			4115,   // Mystic gloves (light)
+			23056   // Mystic gloves (dusk/or)
 		);
 
 		addVariantGroup(
-			4097,   // Mystic boots
-			23059   // Mystic boots (or)
+			4097,   // Mystic boots (blue)
+			4107,   // Mystic boots (dark)
+			4117,   // Mystic boots (light)
+			23059   // Mystic boots (dusk/or)
 		);
 
 		// ==================== CANNON (Shattered Relics) ====================
@@ -1188,31 +1200,44 @@ public class ItemVariantMapping
 			25541   // Celestial ring (charged)
 		);
 
-		// Pharaoh's sceptre
+		// Pharaoh's sceptre (all variants consolidated)
 		addVariantGroup(
-			26945,  // Pharaoh's sceptre (uncharged)
-			26948,  // Pharaoh's sceptre (charged)
-			26950   // Pharaoh's sceptre (charged alt)
+			9044,   // Pharaoh's sceptre (3)
+			9046,   // Pharaoh's sceptre (2)
+			9048,   // Pharaoh's sceptre (1)
+			9050,   // Pharaoh's sceptre (uncharged)
+			26945,  // Pharaoh's sceptre (or) (uncharged)
+			26948,  // Pharaoh's sceptre (or) (full)
+			26950,  // Pharaoh's sceptre (or) (3)
+			26952,  // Pharaoh's sceptre (or) (2)
+			26954,  // Pharaoh's sceptre (or) (1)
+			26956   // Pharaoh's sceptre (or) (uncharged alt)
 		);
 
-		// ==================== REVENANT WEAPONS ====================
+		// ==================== REVENANT / WILDERNESS WEAPONS ====================
 
-		// Craw's bow
+		// Craw's bow / Webweaver bow
 		addVariantGroup(
 			22547,  // Craw's bow (u)
-			22550   // Craw's bow (charged)
+			22550,  // Craw's bow (charged)
+			27652,  // Webweaver bow (uncharged)
+			27655   // Webweaver bow (charged)
 		);
 
-		// Thammaron's sceptre
+		// Thammaron's sceptre / Accursed sceptre
 		addVariantGroup(
 			22552,  // Thammaron's sceptre (u)
-			22555   // Thammaron's sceptre (charged)
+			22555,  // Thammaron's sceptre (charged)
+			27662,  // Accursed sceptre (uncharged)
+			27665   // Accursed sceptre (charged)
 		);
 
-		// Viggora's chainmace
+		// Viggora's chainmace / Ursine chainmace
 		addVariantGroup(
 			22542,  // Viggora's chainmace (u)
-			22545   // Viggora's chainmace (charged)
+			22545,  // Viggora's chainmace (charged)
+			27657,  // Ursine chainmace (uncharged)
+			27660   // Ursine chainmace (charged)
 		);
 
 		// ==================== ARCLIGHT/DARKLIGHT ====================
@@ -1696,14 +1721,7 @@ public class ItemVariantMapping
 			391     // Regular manta ray
 		);
 
-		// ==================== PHARAOH'S SCEPTRE ====================
-
-		addVariantGroup(
-			9044,   // Pharaoh's sceptre (3)
-			9046,   // Pharaoh's sceptre (2)
-			9048,   // Pharaoh's sceptre (1)
-			9050    // Pharaoh's sceptre (uncharged)
-		);
+		// Pharaoh's sceptre (consolidated into earlier section)
 
 		// ==================== ZAMORAKIAN HASTA/SPEAR ====================
 
@@ -1761,15 +1779,7 @@ public class ItemVariantMapping
 			29961   // Tarnished locket (uncharged)
 		);
 
-		// ==================== PHARAOH'S SCEPTRE (OR) ====================
-
-		addVariantGroup(
-			26948,  // Pharaoh's sceptre (full)
-			26950,  // Pharaoh's sceptre (3)
-			26952,  // Pharaoh's sceptre (2)
-			26954,  // Pharaoh's sceptre (1)
-			26956   // Pharaoh's sceptre (uncharged)
-		);
+		// Pharaoh's sceptre (or) (consolidated into earlier section)
 
 		// ==================== BRYOPHYTA'S STAFF ====================
 
@@ -2041,17 +2051,20 @@ public class ItemVariantMapping
 
 		addVariantGroup(
 			26241,  // Virtus mask
-			30029   // Virtus mask (or)
+			30029,  // Virtus mask (or)
+			29814   // Echo Virtus mask
 		);
 
 		addVariantGroup(
 			26243,  // Virtus robe top
-			30031   // Virtus robe top (or)
+			30031,  // Virtus robe top (or)
+			29815   // Echo Virtus robe top
 		);
 
 		addVariantGroup(
 			26245,  // Virtus robe legs
-			30041   // Virtus robe legs (or)
+			30041,  // Virtus robe legs (or)
+			29816   // Echo Virtus robe bottom
 		);
 
 		// ==================== DRAGON HUNTER LANCE ====================
@@ -2061,12 +2074,7 @@ public class ItemVariantMapping
 			30039   // Dragon hunter lance (or)
 		);
 
-		// ==================== PHARAOH'S SCEPTRE (UNCHARGED TO CHARGED) ====================
-
-		addVariantGroup(
-			26945,  // Pharaoh's sceptre (uncharged)
-			26948   // Pharaoh's sceptre (charged)
-		);
+		// Pharaoh's sceptre (uncharged to charged) (consolidated into earlier section)
 
 		// ==================== DRAGONFIRE SHIELDS ====================
 
@@ -2571,21 +2579,7 @@ public class ItemVariantMapping
 			4710    // Ahrim's staff 0
 		);
 
-		// Echo Virtus robes
-		addVariantGroup(
-			29814,  // Echo Virtus mask
-			26241   // Virtus mask
-		);
-
-		addVariantGroup(
-			29815,  // Echo Virtus robe top
-			26243   // Virtus robe top
-		);
-
-		addVariantGroup(
-			29816,  // Echo Virtus robe bottom
-			26245   // Virtus robe bottom
-		);
+		// Echo Virtus robes (consolidated into VIRTUS ROBES section above)
 
 		// ==================== CASTLE WARS DECORATIVE ARMOUR ====================
 
@@ -3397,6 +3391,231 @@ public class ItemVariantMapping
 			12347,  // Gold elegant shirt
 			12349,  // Gold elegant legs
 			12351   // Gold elegant skirt
+		);
+
+		// ==================== SPIRIT ANGLER OUTFIT ====================
+
+		// Angler hat / Spirit angler headband
+		addVariantGroup(
+			13258,  // Angler hat
+			25592   // Spirit angler headband
+		);
+
+		// Angler top / Spirit angler top
+		addVariantGroup(
+			13259,  // Angler top
+			25594   // Spirit angler top
+		);
+
+		// Angler waders / Spirit angler waders
+		addVariantGroup(
+			13260,  // Angler waders
+			25596   // Spirit angler waders
+		);
+
+		// Angler boots / Spirit angler boots
+		addVariantGroup(
+			13261,  // Angler boots
+			25598   // Spirit angler boots
+		);
+
+		// ==================== DRAGON WARHAMMER ====================
+
+		addVariantGroup(
+			13576,  // Dragon warhammer
+			28035   // Dragon warhammer (cr)
+		);
+
+		// ==================== DRAGON CLAWS ====================
+
+		addVariantGroup(
+			13652,  // Dragon claws
+			28039   // Dragon claws (cr)
+		);
+
+		// ==================== GHOMMAL'S HILT (COMBAT ACHIEVEMENTS) ====================
+
+		addVariantGroup(
+			25926,  // Ghommal's hilt 1
+			25928,  // Ghommal's hilt 2
+			25930,  // Ghommal's hilt 3
+			25932,  // Ghommal's hilt 4
+			25934,  // Ghommal's hilt 5
+			25936   // Ghommal's hilt 6
+		);
+
+		// ==================== DIZANA'S QUIVER ====================
+
+		addVariantGroup(
+			28947,  // Dizana's quiver (uncharged)
+			28951   // Dizana's quiver
+		);
+
+		// ==================== QUEST POINT CAPE ====================
+
+		addVariantGroup(
+			9813,   // Quest point cape
+			13068   // Quest point cape (t)
+		);
+
+		// ==================== MUSIC CAPE ====================
+
+		addVariantGroup(
+			13221,  // Music cape
+			13222   // Music cape (t)
+		);
+
+		// ==================== ABYSSAL LANTERN ====================
+
+		addVariantGroup(
+			26822,  // Abyssal lantern (empty)
+			26824,  // Abyssal lantern (normal logs)
+			26826,  // Abyssal lantern (blue logs)
+			26828,  // Abyssal lantern (red logs)
+			26830,  // Abyssal lantern (white logs)
+			26832,  // Abyssal lantern (purple logs)
+			26834,  // Abyssal lantern (green logs)
+			26836,  // Abyssal lantern (oak logs)
+			26838,  // Abyssal lantern (willow logs)
+			26840,  // Abyssal lantern (maple logs)
+			26842,  // Abyssal lantern (yew logs)
+			26844,  // Abyssal lantern (blisterwood logs)
+			26846,  // Abyssal lantern (magic logs)
+			26848   // Abyssal lantern (redwood logs)
+		);
+
+		// ==================== HAT OF THE EYE ====================
+
+		addVariantGroup(
+			26850,  // Hat of the eye
+			26858,  // Hat of the eye (red)
+			26864,  // Hat of the eye (green)
+			26870   // Hat of the eye (blue)
+		);
+
+		// ==================== AVA'S DEVICES ====================
+
+		addVariantGroup(
+			10499,  // Ava's accumulator
+			22109,  // Ava's assembler
+			27374   // Masori assembler
+		);
+
+		// ==================== SKILL CAPES (UNTRIMMED/TRIMMED) ====================
+
+		addVariantGroup(
+			9747,   // Attack cape
+			9748    // Attack cape (t)
+		);
+
+		addVariantGroup(
+			9750,   // Strength cape
+			9751    // Strength cape (t)
+		);
+
+		addVariantGroup(
+			9753,   // Defence cape
+			9754    // Defence cape (t)
+		);
+
+		addVariantGroup(
+			9756,   // Ranged cape
+			9757    // Ranged cape (t)
+		);
+
+		addVariantGroup(
+			9759,   // Prayer cape
+			9760    // Prayer cape (t)
+		);
+
+		addVariantGroup(
+			9762,   // Magic cape
+			9763    // Magic cape (t)
+		);
+
+		addVariantGroup(
+			9765,   // Runecraft cape
+			9766    // Runecraft cape (t)
+		);
+
+		addVariantGroup(
+			9768,   // Hitpoints cape
+			9769    // Hitpoints cape (t)
+		);
+
+		addVariantGroup(
+			9771,   // Agility cape
+			9772    // Agility cape (t)
+		);
+
+		addVariantGroup(
+			9774,   // Herblore cape
+			9775    // Herblore cape (t)
+		);
+
+		addVariantGroup(
+			9777,   // Thieving cape
+			9778    // Thieving cape (t)
+		);
+
+		addVariantGroup(
+			9780,   // Crafting cape
+			9781    // Crafting cape (t)
+		);
+
+		addVariantGroup(
+			9783,   // Fletching cape
+			9784    // Fletching cape (t)
+		);
+
+		addVariantGroup(
+			9786,   // Slayer cape
+			9787    // Slayer cape (t)
+		);
+
+		addVariantGroup(
+			9789,   // Construction cape
+			9790    // Construction cape (t)
+		);
+
+		addVariantGroup(
+			9792,   // Mining cape
+			9793    // Mining cape (t)
+		);
+
+		addVariantGroup(
+			9795,   // Smithing cape
+			9796    // Smithing cape (t)
+		);
+
+		addVariantGroup(
+			9798,   // Fishing cape
+			9799    // Fishing cape (t)
+		);
+
+		addVariantGroup(
+			9801,   // Cooking cape
+			9802    // Cooking cape (t)
+		);
+
+		addVariantGroup(
+			9804,   // Firemaking cape
+			9805    // Firemaking cape (t)
+		);
+
+		addVariantGroup(
+			9807,   // Woodcutting cape
+			9808    // Woodcutting cape (t)
+		);
+
+		addVariantGroup(
+			9810,   // Farming cape
+			9811    // Farming cape (t)
+		);
+
+		addVariantGroup(
+			9948,   // Hunter cape
+			9949    // Hunter cape (t)
 		);
 	}
 
