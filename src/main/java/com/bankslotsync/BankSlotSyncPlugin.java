@@ -1,44 +1,64 @@
 package com.bankslotsync;
 
 import com.google.inject.Provides;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.InventoryID;
+import net.runelite.api.GameState;
 import net.runelite.api.Item;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.events.CommandExecuted;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.gameval.InventoryID;
+import net.runelite.client.chat.ChatColorType;
+import net.runelite.client.chat.ChatMessageBuilder;
+import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.plugins.banktags.BankTagsPlugin;
-import net.runelite.client.plugins.banktags.tabs.TabInterface;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.ItemVariationMapping;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.banktags.BankTagsPlugin;
+import net.runelite.client.plugins.banktags.BankTagsService;
+import net.runelite.client.plugins.banktags.TagManager;
+import net.runelite.client.plugins.banktags.tabs.Layout;
+import net.runelite.client.plugins.banktags.tabs.LayoutManager;
 import net.runelite.client.util.Text;
 
 @Slf4j
 @PluginDependency(BankTagsPlugin.class)
 @PluginDescriptor(
 	name = "Bank Slot Sync",
-	description = "Automatically syncs item variants (recolors, ornament kits) to Bank Tag Layout slots",
+	description = "Keeps Bank Tag layouts and tags in step when you swap an item for a recolour, ornament kit or upgrade",
 	tags = {"bank", "tags", "layout", "variants", "cosmetic", "recolor", "sync"}
 )
 public class BankSlotSyncPlugin extends Plugin
 {
-	private static final String BANK_TAGS_CONFIG_GROUP = "banktags";
-	private static final String BANK_TAG_LAYOUTS_CONFIG_GROUP = "banktaglayouts"; // External plugin
-	private static final String LAYOUT_PREFIX = "layout_";
-	private static final String TAG_TABS_KEY = "tagtabs";
-	private static final String ITEM_TAG_PREFIX = "item_"; // Tags stored per item ID
+	private static final String BANK_TAGS_GROUP = "banktags";
+	private static final String LAYOUT_KEY_PREFIX = BANK_TAGS_GROUP + ".layout_";
+	private static final String ITEM_KEY_PREFIX = "item_";
+	private static final String COMMAND = "bss";
+	private static final int MAX_UNDO = 10;
 
 	@Inject
 	private Client client;
@@ -53,79 +73,138 @@ public class BankSlotSyncPlugin extends Plugin
 	private ItemManager itemManager;
 
 	@Inject
-	private TabInterface tabInterface;
+	private BankTagsService bankTagsService;
 
+	@Inject
+	private LayoutManager layoutManager;
 
+	@Inject
+	private TagManager tagManager;
+
+	@Inject
+	private ChatMessageManager chatMessageManager;
 
 	private final ItemVariantMapping variantMapping = new ItemVariantMapping();
 
-	// Track bank item IDs to detect changes
-	private Set<Integer> previousBankItems = new HashSet<>();
+	// Bank contents at the last bank update. Null until the first bank load after login,
+	// which is only recorded as a baseline and never treated as "new" items.
+	private Set<Integer> previousBankItems;
 
-	// Cache item names for charge variant detection
-	private final Map<Integer, String> itemNameCache = new HashMap<>();
+	// New items waiting one tick so Bank Tags finishes its own update first
+	private final Set<Integer> pendingNewItems = new LinkedHashSet<>();
+	private Set<Integer> pendingBankSnapshot = Collections.emptySet();
+	private boolean processPending;
 
-	// Pending items to process (1-tick delay to let Bank Tags finish first)
-	private Set<Integer> pendingNewItems = new HashSet<>();
-	private Set<Integer> pendingAllBankItems = new HashSet<>();
-	private boolean processPending = false;
+	// "Ask first" mode: the batch waiting for ::bss apply
+	private Set<Integer> askNewItems;
+	private Set<Integer> askBankSnapshot;
+
+	private final Deque<SyncRecord> undoStack = new ArrayDeque<>();
+
+	/**
+	 * Everything one sync changed, so it can be undone.
+	 */
+	private static final class SyncRecord
+	{
+		final Map<String, int[]> layoutsBefore = new LinkedHashMap<>();
+		final List<TagOp> tagOps = new ArrayList<>();
+		final List<String> lines = new ArrayList<>();
+
+		boolean isEmpty()
+		{
+			return layoutsBefore.isEmpty() && tagOps.isEmpty();
+		}
+	}
+
+	private static final class TagOp
+	{
+		final int itemId;
+		final String tag;
+		final boolean added;
+
+		TagOp(int itemId, String tag, boolean added)
+		{
+			this.itemId = itemId;
+			this.tag = tag;
+			this.added = added;
+		}
+	}
 
 	@Override
-	protected void startUp() throws Exception
+	protected void startUp()
 	{
-		log.info("Bank Slot Sync started! Tracking {} items across {} variant groups.",
+		log.debug("Bank Slot Sync started, tracking {} items in {} groups",
 			variantMapping.getItemCount(), variantMapping.getGroupCount());
 	}
 
 	@Override
-	protected void shutDown() throws Exception
+	protected void shutDown()
 	{
-		log.debug("Bank Slot Sync stopped!");
-		previousBankItems.clear();
-		itemNameCache.clear();
+		resetSession();
+		undoStack.clear();
+	}
+
+	private void resetSession()
+	{
+		previousBankItems = null;
 		pendingNewItems.clear();
-		pendingAllBankItems.clear();
+		pendingBankSnapshot = Collections.emptySet();
 		processPending = false;
+		askNewItems = null;
+		askBankSnapshot = null;
+	}
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		GameState state = event.getGameState();
+		if (state == GameState.LOGIN_SCREEN || state == GameState.HOPPING)
+		{
+			// A new account or world: start again from a fresh bank baseline
+			resetSession();
+			if (state == GameState.LOGIN_SCREEN)
+			{
+				undoStack.clear();
+			}
+		}
 	}
 
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (event.getContainerId() != InventoryID.BANK.getId())
+		if (event.getContainerId() != InventoryID.BANK)
 		{
 			return;
 		}
 
-		ItemContainer bankContainer = event.getItemContainer();
-		if (bankContainer == null)
+		ItemContainer bank = event.getItemContainer();
+		if (bank == null)
 		{
 			return;
 		}
 
-		// Get current bank item IDs
-		Set<Integer> currentBankItems = new HashSet<>();
-		for (Item item : bankContainer.getItems())
+		Set<Integer> current = bankItemIds(bank);
+
+		if (previousBankItems == null || config.syncMode() == SyncMode.OFF)
 		{
-			if (item.getId() > 0)
+			previousBankItems = current;
+			return;
+		}
+
+		for (int id : current)
+		{
+			if (!previousBankItems.contains(id) && isCandidate(id))
 			{
-				currentBankItems.add(item.getId());
+				pendingNewItems.add(id);
 			}
 		}
+		previousBankItems = current;
 
-		// Find newly added items (items in current but not in previous)
-		Set<Integer> newItems = new HashSet<>(currentBankItems);
-		newItems.removeAll(previousBankItems);
-
-		if (!newItems.isEmpty())
+		if (!pendingNewItems.isEmpty())
 		{
-			debugLog("New items detected: {}", newItems);
-			pendingNewItems.addAll(newItems);
-			pendingAllBankItems = new HashSet<>(currentBankItems);
+			pendingBankSnapshot = current;
 			processPending = true;
 		}
-
-		// Update previous state for next comparison
-		previousBankItems = currentBankItems;
 	}
 
 	@Subscribe
@@ -137,389 +216,558 @@ public class BankSlotSyncPlugin extends Plugin
 		}
 		processPending = false;
 
-		debugLog("Processing {} pending items", pendingNewItems.size());
-		processNewItems(new HashSet<>(pendingNewItems), pendingAllBankItems);
+		Set<Integer> newItems = new LinkedHashSet<>(pendingNewItems);
+		Set<Integer> bank = pendingBankSnapshot;
 		pendingNewItems.clear();
-		pendingAllBankItems.clear();
+		pendingBankSnapshot = Collections.emptySet();
 
-		// If a bank tag is currently open, refresh the display
-		if (tabInterface.getActiveTag() != null)
+		switch (config.syncMode())
 		{
-			tabInterface.reloadActiveTab();
+			case AUTOMATIC:
+				applySync(newItems, bank);
+				break;
+			case ASK_FIRST:
+				SyncRecord preview = sync(newItems, bank, false);
+				if (!preview.isEmpty())
+				{
+					askNewItems = newItems;
+					askBankSnapshot = bank;
+					sendChat(String.join("; ", preview.lines) + ". Type ::bss apply to update, or ignore this.");
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
-	/**
-	 * Process newly deposited items and sync variants to layouts.
-	 */
-	private void processNewItems(Set<Integer> newItems, Set<Integer> allBankItems)
+	@Subscribe
+	public void onCommandExecuted(CommandExecuted event)
 	{
-		// Get all tag tabs
-		String[] tagTabs = getTagTabs();
-		if (tagTabs == null || tagTabs.length == 0)
+		if (!COMMAND.equalsIgnoreCase(event.getCommand()))
 		{
-			debugLog("No tag tabs found");
 			return;
 		}
-		debugLog("Found {} tag tabs", tagTabs.length);
 
-		for (int newItemId : newItems)
+		String arg = event.getArguments().length > 0 ? event.getArguments()[0].toLowerCase() : "";
+		switch (arg)
 		{
-			// Copy tags from old variant and remove old variant's tags
-			Set<Integer> variantGroup = variantMapping.getVariantGroup(newItemId);
-			if (variantGroup != null)
-			{
-				handleVariantTags(newItemId, variantGroup, allBankItems);
-			}
-
-			// Check each tag tab's layout
-			for (String tagName : tagTabs)
-			{
-				if (tagName == null || tagName.isEmpty())
-				{
-					continue;
-				}
-
-				String layoutStr = getLayoutConfig(tagName);
-				if (layoutStr == null || layoutStr.isEmpty())
-				{
-					continue;
-				}
-
-				LayoutParser.Layout layout = LayoutParser.parseLayout(layoutStr);
-				debugLog("Tag '{}' has layout with {} items", tagName, layout.size());
-
-				int variantPosition = -1;
-				int existingVariantId = -1;
-				boolean isChargeVariant = false;
-
-				// First, check hardcoded variant groups (variantGroup already fetched above)
-				if (variantGroup != null)
-				{
-					variantPosition = layout.findVariantPosition(variantGroup);
-					if (variantPosition >= 0)
-					{
-						existingVariantId = layout.getItem(variantPosition);
-						debugLog("New item {} matches hardcoded variant group at pos {}", newItemId, variantPosition);
-					}
-				}
-
-				// If no hardcoded match, try charge-based detection
-				if (variantPosition < 0 && config.detectChargeVariants())
-				{
-					variantPosition = findChargeVariantPositionInLayout(layout, newItemId);
-					if (variantPosition >= 0)
-					{
-						existingVariantId = layout.getItem(variantPosition);
-						isChargeVariant = true;
-						debugLog("New item {} matches charge variant pattern at pos {}", newItemId, variantPosition);
-					}
-				}
-
-				// No variant match found in this layout
-				if (variantPosition < 0)
-				{
-					continue;
-				}
-
-				// Check if the new item is already at the correct position
-				if (existingVariantId == newItemId)
-				{
-					debugLog("Item {} already at correct position {} in tag '{}'", newItemId, variantPosition, tagName);
-					continue;
-				}
-
-				// Check if the existing variant is still in the bank
-				// If it's gone, the user probably swapped it for the new variant
-				if (allBankItems.contains(existingVariantId))
-				{
-					debugLog("Existing variant {} still in bank", existingVariantId);
-					if (config.layoutMode() == LayoutMode.ADJACENT
-						|| (config.layoutMode() == LayoutMode.REPLACE && config.adjacentWhenOccupied()))
-					{
-						addVariantAdjacent(tagName, layout, variantPosition, newItemId);
-					}
-					continue;
-				}
-
-				// The old variant is gone - replace it with the new one
-				debugLog("Old variant {} is GONE, syncing {} to position {}", existingVariantId, newItemId, variantPosition);
-				debugLog("Layout BEFORE: {}", layout.serialize());
-				syncVariantToLayout(tagName, layout, variantPosition, newItemId, isChargeVariant);
-				debugLog("Layout AFTER: {}", getLayoutConfig(tagName));
-			}
-		}
-	}
-
-	/**
-	 * Sync a variant item to a layout position based on the configured Layout Mode.
-	 * This is called when the OLD variant is no longer in the bank (user swapped it).
-	 */
-	private void syncVariantToLayout(String tagName, LayoutParser.Layout layout, int variantPosition, int newItemId, boolean isChargeVariant)
-	{
-		String itemName = getItemName(newItemId);
-		debugLog("syncVariantToLayout called: tag={}, pos={}, newId={}, layoutMode={}",
-			tagName, variantPosition, newItemId, config.layoutMode());
-
-		// First, remove the new item from any other position in the layout
-		// (in case Bank Tags already added it at the end)
-		int existingPos = layout.findItemPosition(newItemId);
-		debugLog("New item {} current position in layout: {}", newItemId, existingPos);
-		if (existingPos >= 0 && existingPos != variantPosition)
-		{
-			layout.setItem(existingPos, -1); // Remove from old position
-			debugLog("Removed item {} from position {}", newItemId, existingPos);
-		}
-
-		// Use Layout Mode setting to determine placement
-		LayoutMode mode = config.layoutMode();
-		debugLog("Current layoutMode setting: {}", mode);
-
-		switch (mode)
-		{
-			case REPLACE:
-				// Replace: new item takes old item's exact position
-				debugLog("REPLACE mode: setting position {} to item {}", variantPosition, newItemId);
-				layout.setItem(variantPosition, newItemId);
-				log.info("Replaced variant at position {} with {} in tag '{}' layout", variantPosition, itemName, tagName);
-				sendChatNotification("Synced " + itemName + " to '" + tagName + "' (slot " + variantPosition + ")");
+			case "undo":
+				undoLastSync();
 				break;
-
-			case ADJACENT:
-				// Insert next to the variant, shifting only items on the same row
-				int insertPos = variantPosition + 1;
-				debugLog("ADJACENT mode: variantPosition={}, insertPos={}", variantPosition, insertPos);
-				debugLog("Layout BEFORE: {}", layout.getPositionToItem());
-				layout.insertAtSameRow(insertPos, newItemId);
-				debugLog("Layout AFTER: {}", layout.getPositionToItem());
-				log.info("Inserted {} at position {} in tag '{}' layout", itemName, insertPos, tagName);
-				sendChatNotification("Synced " + itemName + " to '" + tagName + "' (slot " + insertPos + ")");
+			case "apply":
+				if (askNewItems == null)
+				{
+					sendChatAlways("nothing is waiting to be applied.");
+					return;
+				}
+				Set<Integer> items = askNewItems;
+				Set<Integer> bank = askBankSnapshot;
+				askNewItems = null;
+				askBankSnapshot = null;
+				if (!applySync(items, bank))
+				{
+					sendChatAlways("nothing left to change.");
+				}
+				break;
+			default:
+				sendChatAlways("commands are ::bss undo (revert the last sync) and ::bss apply (apply a waiting sync).");
 				break;
 		}
-
-		String serialized = layout.serialize();
-		debugLog("Serialized layout to save: {}", serialized);
-		saveLayoutConfig(tagName, serialized);
 	}
 
 	/**
-	 * Add a new variant next to an existing variant (ADJACENT mode when both items are in bank).
+	 * Run a sync and keep it for undo. Returns true if anything changed.
 	 */
-	private void addVariantAdjacent(String tagName, LayoutParser.Layout layout, int existingPosition, int newItemId)
+	private boolean applySync(Set<Integer> newItems, Set<Integer> bank)
 	{
-		String itemName = getItemName(newItemId);
-
-		// First, remove the new item from any other position in the layout
-		int existingPos = layout.findItemPosition(newItemId);
-		if (existingPos >= 0)
+		SyncRecord record = sync(newItems, bank, true);
+		if (record.isEmpty())
 		{
-			layout.setItem(existingPos, -1);
-			debugLog("Removed item {} from position {} before placing adjacent", newItemId, existingPos);
+			return false;
 		}
 
-		// Insert next to the existing item, shifting only items on the same row
-		int insertPos = existingPosition + 1;
-		layout.insertAtSameRow(insertPos, newItemId);
-
-		log.info("Inserted {} at position {} (adjacent) in tag '{}' layout", itemName, insertPos, tagName);
-		sendChatNotification("Added " + itemName + " to '" + tagName + "' (slot " + insertPos + ")");
-
-		saveLayoutConfig(tagName, layout.serialize());
-	}
-
-	/**
-	 * Get the name of an item, using cache when possible.
-	 */
-	private String getItemName(int itemId)
-	{
-		return itemNameCache.computeIfAbsent(itemId, id -> {
-			ItemComposition comp = itemManager.getItemComposition(id);
-			return comp != null ? comp.getName() : null;
-		});
-	}
-
-	/**
-	 * Find a charge variant in the layout by matching item names.
-	 * Returns the position of a matching charge variant, or -1 if none found.
-	 */
-	private int findChargeVariantPositionInLayout(LayoutParser.Layout layout, int newItemId)
-	{
-		String newItemName = getItemName(newItemId);
-		if (newItemName == null || !ChargeVariantDetector.isChargedItem(newItemName))
+		undoStack.push(record);
+		while (undoStack.size() > MAX_UNDO)
 		{
-			return -1;
+			undoStack.removeLast();
 		}
 
-		String newBaseName = ChargeVariantDetector.getNormalizedBaseName(newItemName);
-
-		for (Map.Entry<Integer, Integer> entry : layout.getPositionToItem().entrySet())
+		if (config.showNotifications())
 		{
-			int layoutItemId = entry.getValue();
-			if (layoutItemId <= 0 || layoutItemId == newItemId)
+			sendChat(String.join("; ", record.lines) + ". Type ::bss undo to revert.");
+		}
+		return true;
+	}
+
+	/**
+	 * Work out (and, if {@code apply}, make) the layout and tag changes for a batch of
+	 * newly banked items.
+	 */
+	private SyncRecord sync(Set<Integer> newItems, Set<Integer> bank, boolean apply)
+	{
+		SyncRecord record = new SyncRecord();
+		Set<Integer> held = heldItemIds();
+		Set<String> excluded = excludedTabs();
+
+		String activeTag = standardize(bankTagsService.getActiveTag());
+		Layout activeLayout = bankTagsService.getActiveLayout();
+
+		// Load every layout once per batch
+		Map<String, int[]> layouts = new LinkedHashMap<>();
+		for (String tag : layoutTags())
+		{
+			if (excluded.contains(tag))
+			{
+				continue;
+			}
+			Layout layout = tag.equals(activeTag) && activeLayout != null ? activeLayout : layoutManager.loadLayout(tag);
+			if (layout != null && layout.getLayout() != null)
+			{
+				layouts.put(tag, Arrays.copyOf(layout.getLayout(), layout.getLayout().length));
+			}
+		}
+
+		Set<String> changedTags = new LinkedHashSet<>();
+
+		for (int newId : newItems)
+		{
+			Set<Integer> group = variantMapping.getVariantGroup(newId);
+			boolean fromChargeDetection = false;
+			if (group == null)
+			{
+				group = chargeVariants(newId);
+				fromChargeDetection = true;
+			}
+			if (group == null || group.size() < 2)
 			{
 				continue;
 			}
 
-			String layoutItemName = getItemName(layoutItemId);
-			if (layoutItemName == null)
+			String newName = itemName(newId);
+			Map<Integer, List<String>> replacedIn = new LinkedHashMap<>();
+			List<String> addedTo = new ArrayList<>();
+
+			// Tags
+			List<String> copied = new ArrayList<>();
+			int tagSource = -1;
+			if (config.copyTags() && !fromChargeDetection)
 			{
-				continue;
-			}
-
-			String layoutBaseName = ChargeVariantDetector.getNormalizedBaseName(layoutItemName);
-			if (newBaseName.equals(layoutBaseName))
-			{
-				log.debug("Found charge variant match: {} ({}) -> {} ({})",
-					newItemName, newItemId, layoutItemName, layoutItemId);
-				return entry.getKey();
-			}
-		}
-
-		return -1;
-	}
-
-	/**
-	 * Send a notification to the game chat.
-	 */
-	private void sendChatNotification(String message)
-	{
-		if (config.showNotifications() && client.getGameState().getState() >= 30)
-		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "[Bank Slot Sync] " + message, null);
-		}
-	}
-
-	/**
-	 * Get all tag tab names.
-	 */
-	private String[] getTagTabs()
-	{
-		String tagTabsStr = configManager.getConfiguration(BANK_TAGS_CONFIG_GROUP, TAG_TABS_KEY);
-		if (tagTabsStr == null || tagTabsStr.isEmpty())
-		{
-			return new String[0];
-		}
-		return tagTabsStr.split(",");
-	}
-
-	/**
-	 * Get the tags assigned to an item ID.
-	 */
-	private String getItemTags(int itemId)
-	{
-		return configManager.getConfiguration(BANK_TAGS_CONFIG_GROUP, ITEM_TAG_PREFIX + itemId);
-	}
-
-	/**
-	 * Set the tags for an item ID.
-	 */
-	private void setItemTags(int itemId, String tags)
-	{
-		if (tags != null && !tags.isEmpty())
-		{
-			configManager.setConfiguration(BANK_TAGS_CONFIG_GROUP, ITEM_TAG_PREFIX + itemId, tags);
-		}
-	}
-
-	/**
-	 * Remove all tags from an item ID.
-	 */
-	private void removeItemTags(int itemId)
-	{
-		configManager.unsetConfiguration(BANK_TAGS_CONFIG_GROUP, ITEM_TAG_PREFIX + itemId);
-		log.info("Removed tags from item {}", itemId);
-	}
-
-	/**
-	 * Handle tag operations for a variant: copy tags to new item and remove from old.
-	 */
-	private void handleVariantTags(int newItemId, Set<Integer> variantGroup, Set<Integer> allBankItems)
-	{
-		// Find a variant that has tags and is no longer in the bank (was replaced)
-		for (int variantId : variantGroup)
-		{
-			if (variantId == newItemId)
-			{
-				continue;
-			}
-
-			String oldTags = getItemTags(variantId);
-			if (oldTags != null && !oldTags.isEmpty())
-			{
-				// Check if this variant is gone from bank (user swapped it)
-				if (!allBankItems.contains(variantId))
+				for (int oldId : group)
 				{
-					// Copy tags to new item
-					String existingNewTags = getItemTags(newItemId);
-					if (existingNewTags == null || existingNewTags.isEmpty())
+					if (oldId == newId || bank.contains(oldId) || held.contains(oldId))
 					{
-						setItemTags(newItemId, oldTags);
-						log.info("Copied tags '{}' from item {} to item {}", oldTags, variantId, newItemId);
+						continue;
 					}
-
-					// Remove tags from old item (if enabled)
-					if (config.removeOldTags())
+					List<String> toCopy = tagsToCopy(oldId, newId, excluded);
+					if (!toCopy.isEmpty())
 					{
-						removeItemTags(variantId);
-						log.info("Removed tags from old variant: {}", variantId);
+						tagSource = oldId;
+						copied.addAll(toCopy);
+						break;
 					}
+				}
+			}
+			if (tagSource > 0)
+			{
+				Set<String> oldVariationTags = variationTags(tagSource);
+				for (String tag : copied)
+				{
+					record.tagOps.add(new TagOp(newId, tag, true));
+					if (apply)
+					{
+						tagManager.addTag(newId, tag, false);
+					}
+					if (config.removeOldTags() && !oldVariationTags.contains(tag))
+					{
+						record.tagOps.add(new TagOp(tagSource, tag, false));
+						if (apply)
+						{
+							tagManager.removeTag(tagSource, tag);
+						}
+					}
+					changedTags.add(tag);
+				}
+			}
 
-					return; // Only process one old variant
+			// Layouts
+			for (Map.Entry<String, int[]> entry : layouts.entrySet())
+			{
+				String tag = entry.getKey();
+				int[] arr = entry.getValue();
+
+				// Already placed (on purpose or by hand): leave this layout alone
+				if (LayoutEdits.count(arr, newId) > 0)
+				{
+					continue;
+				}
+
+				int gonePos = -1;
+				int presentPos = -1;
+				for (int pos = 0; pos < arr.length; pos++)
+				{
+					int id = arr[pos];
+					if (id <= 0 || id == newId || !group.contains(id))
+					{
+						continue;
+					}
+					boolean stillHave = bank.contains(id) || held.contains(id);
+					if (!stillHave && gonePos < 0)
+					{
+						gonePos = pos;
+					}
+					else if (stillHave && presentPos < 0)
+					{
+						presentPos = pos;
+					}
+				}
+
+				int[] updated = null;
+				if (gonePos >= 0)
+				{
+					int oldId = arr[gonePos];
+					if (config.layoutMode() == LayoutMode.REPLACE)
+					{
+						updated = Arrays.copyOf(arr, arr.length);
+						LayoutEdits.replaceAll(updated, oldId, newId);
+					}
+					else
+					{
+						updated = LayoutEdits.insertNextTo(arr, gonePos, newId);
+					}
+					replacedIn.computeIfAbsent(oldId, k -> new ArrayList<>()).add(tag);
+				}
+				else if (presentPos >= 0
+					&& (config.layoutMode() == LayoutMode.ADJACENT || config.adjacentWhenOccupied()))
+				{
+					updated = LayoutEdits.insertNextTo(arr, presentPos, newId);
+					addedTo.add(tag);
+				}
+
+				if (updated != null)
+				{
+					record.layoutsBefore.putIfAbsent(tag, arr);
+					entry.setValue(updated);
+					changedTags.add(tag);
+				}
+			}
+
+			boolean replace = config.layoutMode() == LayoutMode.REPLACE;
+			for (Map.Entry<Integer, List<String>> e : replacedIn.entrySet())
+			{
+				String verb = replace
+					? (apply ? "replaced" : "can replace")
+					: (apply ? "went next to" : "can go next to");
+				record.lines.add(newName + " " + verb + " " + itemName(e.getKey()) + " in " + joinTabs(e.getValue()));
+			}
+			if (!addedTo.isEmpty())
+			{
+				record.lines.add(newName + (apply ? " was added" : " can be added") + " next to the old version in "
+					+ joinTabs(addedTo));
+			}
+			if (!copied.isEmpty() && replacedIn.isEmpty() && addedTo.isEmpty())
+			{
+				record.lines.add(newName + (apply ? " got" : " can get") + " the tags " + joinTabs(copied)
+					+ " from " + itemName(tagSource));
+			}
+		}
+
+		if (apply)
+		{
+			boolean refreshActive = false;
+			for (String tag : record.layoutsBefore.keySet())
+			{
+				boolean active = tag.equals(activeTag) && activeLayout != null;
+				writeLayout(tag, layouts.get(tag), active ? activeLayout : null);
+				refreshActive |= active;
+			}
+			refreshActive |= activeTag != null && changedTags.contains(activeTag);
+			if (refreshActive)
+			{
+				reopenActiveTag();
+			}
+		}
+
+		return record;
+	}
+
+	private void undoLastSync()
+	{
+		SyncRecord record = undoStack.poll();
+		if (record == null)
+		{
+			sendChatAlways("there is nothing to undo.");
+			return;
+		}
+
+		String activeTag = standardize(bankTagsService.getActiveTag());
+		Layout activeLayout = bankTagsService.getActiveLayout();
+		boolean refreshActive = false;
+
+		for (Map.Entry<String, int[]> e : record.layoutsBefore.entrySet())
+		{
+			boolean active = e.getKey().equals(activeTag) && activeLayout != null;
+			writeLayout(e.getKey(), e.getValue(), active ? activeLayout : null);
+			refreshActive |= active;
+		}
+
+		List<TagOp> ops = new ArrayList<>(record.tagOps);
+		Collections.reverse(ops);
+		for (TagOp op : ops)
+		{
+			if (op.added)
+			{
+				tagManager.removeTag(op.itemId, op.tag);
+			}
+			else
+			{
+				tagManager.addTag(op.itemId, op.tag, false);
+			}
+			refreshActive |= op.tag.equals(activeTag);
+		}
+
+		if (refreshActive)
+		{
+			reopenActiveTag();
+		}
+		sendChatAlways("undid the last sync (" + String.join("; ", record.lines) + ").");
+	}
+
+	/**
+	 * Save a layout. When it is the open tab, change Bank Tags' own copy too so it does
+	 * not write the old version back.
+	 */
+	private void writeLayout(String tag, int[] items, Layout activeLayout)
+	{
+		Layout target = activeLayout != null ? activeLayout : new Layout(tag, Arrays.copyOf(items, items.length));
+		if (activeLayout != null)
+		{
+			if (target.size() < items.length)
+			{
+				target.resize(items.length);
+			}
+			for (int pos = 0; pos < target.size(); pos++)
+			{
+				target.setItemAtPos(pos < items.length ? items[pos] : LayoutEdits.EMPTY, pos);
+			}
+		}
+		layoutManager.saveLayout(target);
+	}
+
+	private void reopenActiveTag()
+	{
+		String activeTag = bankTagsService.getActiveTag();
+		if (activeTag != null)
+		{
+			bankTagsService.openBankTag(activeTag, BankTagsService.OPTION_ALLOW_MODIFICATIONS);
+		}
+	}
+
+	/**
+	 * Tags the old item has (set on that exact item) that the new item does not have yet.
+	 */
+	private List<String> tagsToCopy(int oldId, int newId, Set<String> excluded)
+	{
+		List<String> result = new ArrayList<>();
+		Collection<String> oldTags = exactTags(oldId);
+		if (oldTags.isEmpty())
+		{
+			return result;
+		}
+		Set<String> newTags = new HashSet<>(exactTags(newId));
+		newTags.addAll(variationTags(newId));
+		for (String tag : oldTags)
+		{
+			if (!newTags.contains(tag) && !excluded.contains(tag))
+			{
+				result.add(tag);
+			}
+		}
+		return result;
+	}
+
+	// Bank Tags config is only read here; all writes go through TagManager and LayoutManager.
+	private Collection<String> exactTags(int itemId)
+	{
+		return readTags(itemManager.canonicalize(itemId));
+	}
+
+	private Set<String> variationTags(int itemId)
+	{
+		return new HashSet<>(readTags(-ItemVariationMapping.map(itemManager.canonicalize(itemId))));
+	}
+
+	private Collection<String> readTags(int key)
+	{
+		String value = configManager.getConfiguration(BANK_TAGS_GROUP, ITEM_KEY_PREFIX + key);
+		if (value == null || value.isEmpty())
+		{
+			return Collections.emptyList();
+		}
+		return new LinkedHashSet<>(Text.fromCSV(value.toLowerCase()));
+	}
+
+	/**
+	 * Names of all tags that have a layout.
+	 */
+	private List<String> layoutTags()
+	{
+		List<String> tags = new ArrayList<>();
+		for (String key : configManager.getConfigurationKeys(LAYOUT_KEY_PREFIX))
+		{
+			String tag = key.substring(LAYOUT_KEY_PREFIX.length());
+			if (!tag.isEmpty())
+			{
+				tags.add(tag);
+			}
+		}
+		return tags;
+	}
+
+	private Set<String> excludedTabs()
+	{
+		Set<String> result = new HashSet<>();
+		for (String tab : Text.fromCSV(config.excludedTabs()))
+		{
+			String s = standardize(tab);
+			if (s != null && !s.isEmpty())
+			{
+				result.add(s);
+			}
+		}
+		return result;
+	}
+
+	private static String standardize(String tag)
+	{
+		return tag == null ? null : Text.standardize(tag);
+	}
+
+	/**
+	 * Whether a newly banked item could need syncing at all. Used to skip everything
+	 * else quickly for ordinary items.
+	 */
+	private boolean isCandidate(int itemId)
+	{
+		if (variantMapping.isVariant(itemId))
+		{
+			return true;
+		}
+		return config.detectChargeVariants() && chargeVariants(itemId) != null;
+	}
+
+	/**
+	 * Other charge or degradation states RuneLite treats as the same item, or null.
+	 * Potions and other drinkable items are skipped.
+	 */
+	private Set<Integer> chargeVariants(int itemId)
+	{
+		if (!config.detectChargeVariants())
+		{
+			return null;
+		}
+		Collection<Integer> variations = ItemVariationMapping.getVariations(ItemVariationMapping.map(itemId));
+		if (variations == null || variations.size() < 2 || isDrinkable(itemId))
+		{
+			return null;
+		}
+		return new HashSet<>(variations);
+	}
+
+	private boolean isDrinkable(int itemId)
+	{
+		ItemComposition comp = itemManager.getItemComposition(itemId);
+		String[] actions = comp.getInventoryActions();
+		if (actions == null)
+		{
+			return false;
+		}
+		for (String action : actions)
+		{
+			if ("Drink".equalsIgnoreCase(action))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Real (non-placeholder) items in the bank.
+	 */
+	private Set<Integer> bankItemIds(ItemContainer bank)
+	{
+		Set<Integer> ids = new HashSet<>();
+		for (Item item : bank.getItems())
+		{
+			// Placeholders have a quantity of 0
+			if (item.getId() > 0 && item.getQuantity() > 0)
+			{
+				ids.add(item.getId());
+			}
+		}
+		return ids;
+	}
+
+	/**
+	 * Items in the inventory or worn. These have not been swapped away.
+	 */
+	private Set<Integer> heldItemIds()
+	{
+		Set<Integer> ids = new HashSet<>();
+		for (int containerId : new int[]{InventoryID.INV, InventoryID.WORN})
+		{
+			ItemContainer container = client.getItemContainer(containerId);
+			if (container == null)
+			{
+				continue;
+			}
+			for (Item item : container.getItems())
+			{
+				if (item.getId() > 0)
+				{
+					ids.add(itemManager.canonicalize(item.getId()));
 				}
 			}
 		}
+		return ids;
 	}
 
-	/**
-	 * Get the layout config for a specific tag.
-	 * Checks both built-in Bank Tags and external Bank Tag Layouts plugin.
-	 */
-	private String getLayoutConfig(String tagName)
+	private String itemName(int itemId)
 	{
-		// Standardize the tag name to match Bank Tags format (lowercase, trimmed)
-		String standardizedTag = Text.standardize(tagName);
-
-		// First try the external Bank Tag Layouts plugin
-		String layout = configManager.getConfiguration(BANK_TAG_LAYOUTS_CONFIG_GROUP, LAYOUT_PREFIX + standardizedTag);
-		if (layout != null && !layout.isEmpty())
-		{
-			debugLog("Layout for '{}' (external plugin): {} chars", tagName, layout.length());
-			return layout;
-		}
-
-		// Fall back to built-in Bank Tags
-		layout = configManager.getConfiguration(BANK_TAGS_CONFIG_GROUP, LAYOUT_PREFIX + standardizedTag);
-		debugLog("Layout for '{}' (built-in): {} chars", tagName, layout != null ? layout.length() : 0);
-		return layout;
+		return itemManager.getItemComposition(itemId).getMembersName();
 	}
 
-	/**
-	 * Save the layout config for a specific tag.
-	 * Saves to whichever config group has the existing layout.
-	 */
-	private void saveLayoutConfig(String tagName, String layoutStr)
+	private static String joinTabs(List<String> tabs)
 	{
-		// Standardize the tag name to match Bank Tags format
-		String standardizedTag = Text.standardize(tagName);
-		debugLog("saveLayoutConfig: tag='{}' standardized='{}' length={}", tagName, standardizedTag, layoutStr.length());
-
-		// Check which config group has the layout
-		String externalLayout = configManager.getConfiguration(BANK_TAG_LAYOUTS_CONFIG_GROUP, LAYOUT_PREFIX + standardizedTag);
-		if (externalLayout != null && !externalLayout.isEmpty())
+		if (tabs.size() <= 3)
 		{
-			configManager.setConfiguration(BANK_TAG_LAYOUTS_CONFIG_GROUP, LAYOUT_PREFIX + standardizedTag, layoutStr);
-			debugLog("SAVED to external: {}", LAYOUT_PREFIX + standardizedTag);
+			return String.join(", ", tabs);
 		}
-		else
-		{
-			configManager.setConfiguration(BANK_TAGS_CONFIG_GROUP, LAYOUT_PREFIX + standardizedTag, layoutStr);
-			debugLog("SAVED to built-in: {}", LAYOUT_PREFIX + standardizedTag);
-		}
+		return String.join(", ", tabs.subList(0, 3)) + " (+" + (tabs.size() - 3) + " more)";
 	}
 
-	private void debugLog(String message, Object... args)
+	private void sendChat(String message)
 	{
-		log.debug(message, args);
+		if (client.getGameState() != GameState.LOGGED_IN)
+		{
+			return;
+		}
+		sendChatAlways(message);
+	}
+
+	private void sendChatAlways(String message)
+	{
+		String text = new ChatMessageBuilder()
+			.append(ChatColorType.HIGHLIGHT)
+			.append("Bank Slot Sync: ")
+			.append(ChatColorType.NORMAL)
+			.append(message)
+			.build();
+
+		chatMessageManager.queue(QueuedMessage.builder()
+			.type(ChatMessageType.CONSOLE)
+			.runeLiteFormattedMessage(text)
+			.build());
 	}
 
 	@Provides

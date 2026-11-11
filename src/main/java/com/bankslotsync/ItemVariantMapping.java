@@ -1,25 +1,34 @@
 package com.bankslotsync;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Singleton;
+import net.runelite.api.gameval.ItemID;
 
 /**
- * Maintains mappings of item variants to their base items.
- * A variant group contains all item IDs that represent the same "logical" item
- * (e.g., all graceful top recolors, all slayer helm variants).
+ * Groups of item IDs that are versions of the same item (recolours, ornament kits,
+ * charges, imbues, locked versions and a few upgrade chains such as Oathplate to
+ * Radiant oathplate).
  *
- * Item IDs sourced from: https://oldschool.runescape.wiki
+ * <p>Every ID is written as a {@link ItemID} constant so the compiler checks that it
+ * exists. Each group carries a label and a list of keywords ("A|B") that every constant
+ * name in the group must contain one of. {@code ItemVariantMappingTest} reads this file
+ * and enforces that, and also that no ID sits in more than one group.
+ *
+ * <p>Only bankable versions are listed: worn-only, noted, placeholder, broken and
+ * Last Man Standing copies are left out.
  */
-@Singleton
 public class ItemVariantMapping
 {
 	// Maps each item ID to its variant group (all IDs in the same group)
 	private final Map<Integer, Set<Integer>> itemToGroup = new HashMap<>();
+
+	// Group label for each item ID, used in chat messages
+	private final Map<Integer, String> itemToLabel = new HashMap<>();
 
 	// List of all variant groups for reference
 	private final List<Set<Integer>> variantGroups = new ArrayList<>();
@@ -31,3612 +40,2891 @@ public class ItemVariantMapping
 
 	private void initializeVariantGroups()
 	{
-		// ==================== GRACEFUL OUTFIT ====================
-
-		// Graceful Hood variants
-		addVariantGroup(
-			11850,  // Graceful hood (default)
-			13579,  // Graceful hood (Arceuus)
-			13591,  // Graceful hood (Piscarilius)
-			13603,  // Graceful hood (Lovakengj)
-			13615,  // Graceful hood (Shayzien)
-			13627,  // Graceful hood (Hosidius)
-			13667,  // Graceful hood (Kourend)
-			21061,  // Graceful hood (Agility Arena)
-			24743,  // Graceful hood (Hallowed)
-			25069,  // Graceful hood (Trailblazer)
-			30045   // Graceful hood (Varlamore)
-		);
-
-		// Graceful Cape variants
-		addVariantGroup(
-			11852,  // Graceful cape (default)
-			13581,  // Graceful cape (Arceuus)
-			13593,  // Graceful cape (Piscarilius)
-			13605,  // Graceful cape (Lovakengj)
-			13617,  // Graceful cape (Shayzien)
-			13629,  // Graceful cape (Hosidius)
-			13669,  // Graceful cape (Kourend)
-			21063,  // Graceful cape (Agility Arena)
-			24745,  // Graceful cape (Hallowed)
-			25071,  // Graceful cape (Trailblazer)
-			30047   // Graceful cape (Varlamore)
-		);
-
-		// Graceful Top variants
-		addVariantGroup(
-			11854,  // Graceful top (default)
-			13583,  // Graceful top (Arceuus)
-			13595,  // Graceful top (Piscarilius)
-			13607,  // Graceful top (Lovakengj)
-			13619,  // Graceful top (Shayzien)
-			13631,  // Graceful top (Hosidius)
-			13671,  // Graceful top (Kourend)
-			21065,  // Graceful top (Agility Arena)
-			24747,  // Graceful top (Hallowed)
-			25073,  // Graceful top (Trailblazer)
-			30049   // Graceful top (Varlamore)
-		);
-
-		// Graceful Legs variants
-		addVariantGroup(
-			11856,  // Graceful legs (default)
-			13585,  // Graceful legs (Arceuus)
-			13597,  // Graceful legs (Piscarilius)
-			13609,  // Graceful legs (Lovakengj)
-			13621,  // Graceful legs (Shayzien)
-			13633,  // Graceful legs (Hosidius)
-			13673,  // Graceful legs (Kourend)
-			21067,  // Graceful legs (Agility Arena)
-			24749,  // Graceful legs (Hallowed)
-			25075,  // Graceful legs (Trailblazer)
-			30051   // Graceful legs (Varlamore)
-		);
-
-		// Graceful Gloves variants
-		addVariantGroup(
-			11858,  // Graceful gloves (default)
-			13587,  // Graceful gloves (Arceuus)
-			13599,  // Graceful gloves (Piscarilius)
-			13611,  // Graceful gloves (Lovakengj)
-			13623,  // Graceful gloves (Shayzien)
-			13635,  // Graceful gloves (Hosidius)
-			13675,  // Graceful gloves (Kourend)
-			21069,  // Graceful gloves (Agility Arena)
-			24751,  // Graceful gloves (Hallowed)
-			25077,  // Graceful gloves (Trailblazer)
-			30053   // Graceful gloves (Varlamore)
-		);
-
-		// Graceful Boots variants
-		addVariantGroup(
-			11860,  // Graceful boots (default)
-			13589,  // Graceful boots (Arceuus)
-			13601,  // Graceful boots (Piscarilius)
-			13613,  // Graceful boots (Lovakengj)
-			13625,  // Graceful boots (Shayzien)
-			13637,  // Graceful boots (Hosidius)
-			13677,  // Graceful boots (Kourend)
-			21071,  // Graceful boots (Agility Arena)
-			24753,  // Graceful boots (Hallowed)
-			25079,  // Graceful boots (Trailblazer)
-			30055   // Graceful boots (Varlamore)
-		);
-
-		// ==================== SLAYER HELMETS ====================
-
-		// Slayer Helmet (all colors and imbued variants)
-		addVariantGroup(
-			11864,  // Slayer helmet
-			11865,  // Slayer helmet (i)
-			19639,  // Black slayer helmet
-			19641,  // Black slayer helmet (i)
-			19643,  // Green slayer helmet
-			19645,  // Green slayer helmet (i)
-			19647,  // Red slayer helmet
-			19649,  // Red slayer helmet (i)
-			19651,  // Purple slayer helmet
-			19653,  // Purple slayer helmet (i)
-			21264,  // Purple slayer helmet (wrong ID in original, this is correct)
-			21266,  // Purple slayer helmet (i)
-			21888,  // Turquoise slayer helmet
-			21890,  // Turquoise slayer helmet (i)
-			23073,  // Hydra slayer helmet
-			23075,  // Hydra slayer helmet (i)
-			24370,  // Twisted slayer helmet
-			24444,  // Twisted slayer helmet (i)
-			25898,  // Tztok slayer helmet
-			25900,  // Tztok slayer helmet (i)
-			25904,  // Vampyric slayer helmet
-			25906,  // Vampyric slayer helmet (i)
-			25910,  // Tzkal slayer helmet
-			25912,  // Tzkal slayer helmet (i)
-			// Soul Wars imbued versions
-			25177,  // Slayer helmet (i) - Soul Wars
-			25179,  // Black slayer helmet (i) - Soul Wars
-			25181,  // Green slayer helmet (i) - Soul Wars
-			25183,  // Red slayer helmet (i) - Soul Wars
-			25185,  // Purple slayer helmet (i) - Soul Wars
-			25187,  // Turquoise slayer helmet (i) - Soul Wars
-			25189,  // Hydra slayer helmet (i) - Soul Wars
-			25191,  // Twisted slayer helmet (i) - Soul Wars
-			// Emir's Arena imbued versions
-			26674,  // Slayer helmet (i) - Emir's Arena
-			26675,  // Black slayer helmet (i) - Emir's Arena
-			26676,  // Green slayer helmet (i) - Emir's Arena
-			26677,  // Red slayer helmet (i) - Emir's Arena
-			26678,  // Purple slayer helmet (i) - Emir's Arena
-			26679,  // Turquoise slayer helmet (i) - Emir's Arena
-			26680,  // Hydra slayer helmet (i) - Emir's Arena
-			26681,  // Twisted slayer helmet (i) - Emir's Arena
-			26682,  // Tztok slayer helmet (i) - Emir's Arena
-			26683   // Vampyric slayer helmet (i) - Emir's Arena
-		);
-
-		// ==================== GODSWORDS ====================
-
-		// Armadyl godsword variants
-		addVariantGroup(
-			11802,  // Armadyl godsword
-			20368   // Armadyl godsword (or)
-		);
-
-		// Bandos godsword variants
-		addVariantGroup(
-			11804,  // Bandos godsword
-			20370   // Bandos godsword (or)
-		);
-
-		// Saradomin godsword variants
-		addVariantGroup(
-			11806,  // Saradomin godsword
-			20372   // Saradomin godsword (or)
-		);
-
-		// Zamorak godsword variants
-		addVariantGroup(
-			11808,  // Zamorak godsword
-			20374   // Zamorak godsword (or)
-		);
-
-		// ==================== JEWELRY ====================
-
-		// Amulet of fury variants
-		addVariantGroup(
-			6585,   // Amulet of fury
-			12436,  // Amulet of fury (or)
-			24780   // Amulet of blood fury
-		);
-
-		// Amulet of torture variants
-		addVariantGroup(
-			19553,  // Amulet of torture
-			20366   // Amulet of torture (or)
-		);
-
-		// Necklace of anguish variants
-		addVariantGroup(
-			19547,  // Necklace of anguish
-			22249   // Necklace of anguish (or)
-		);
-
-		// Tormented bracelet variants
-		addVariantGroup(
-			19544,  // Tormented bracelet
-			23444   // Tormented bracelet (or)
-		);
-
-		// Occult necklace variants
-		addVariantGroup(
-			12002,  // Occult necklace
-			19720   // Occult necklace (or)
-		);
-
-		// Berserker necklace variants
-		addVariantGroup(
-			11128,  // Berserker necklace
-			23240   // Berserker necklace (or)
-		);
-
-		// ==================== RINGS ====================
-
-		// Berserker ring variants
-		addVariantGroup(
-			6737,   // Berserker ring
-			11773,  // Berserker ring (i)
-			27306   // Berserker ring (i) - Soul Wars
-		);
-
-		// Archers ring variants
-		addVariantGroup(
-			6733,   // Archers ring
-			11771,  // Archers ring (i)
-			27304   // Archers ring (i) - Soul Wars
-		);
-
-		// Seers ring variants
-		addVariantGroup(
-			6731,   // Seers ring
-			11770,  // Seers ring (i)
-			27303   // Seers ring (i) - Soul Wars
-		);
-
-		// Warrior ring variants
-		addVariantGroup(
-			6735,   // Warrior ring
-			11772,  // Warrior ring (i)
-			27305   // Warrior ring (i) - Soul Wars
-		);
-
-		// Treasonous ring variants
-		addVariantGroup(
-			12601,  // Treasonous ring
-			12694,  // Treasonous ring (i)
-			27308   // Treasonous ring (i) - Soul Wars
-		);
-
-		// Tyrannical ring variants
-		addVariantGroup(
-			12603,  // Tyrannical ring
-			12692,  // Tyrannical ring (i)
-			27307   // Tyrannical ring (i) - Soul Wars
-		);
-
-		// Ring of the gods variants
-		addVariantGroup(
-			12605,  // Ring of the gods
-			13202,  // Ring of the gods (i)
-			27309   // Ring of the gods (i) - Soul Wars
-		);
-
-		// Ring of wealth variants
-		addVariantGroup(
-			2572,   // Ring of wealth
-			12785   // Ring of wealth (i)
-		);
-
-		// ==================== DRAGON EQUIPMENT ====================
-
-		// Dragon scimitar variants
-		addVariantGroup(
-			4587,   // Dragon scimitar
-			20000   // Dragon scimitar (or)
-		);
-
-		// Dragon defender variants
-		addVariantGroup(
-			12954,  // Dragon defender
-			19722   // Dragon defender (t)
-		);
-
-		// Rune defender variants
-		addVariantGroup(
-			8850,   // Rune defender
-			23230   // Rune defender (t)
-		);
-
-		// Dragon boots variants
-		addVariantGroup(
-			11840,  // Dragon boots
-			22234   // Dragon boots (g)
-		);
-
-		// Dragon chainbody variants
-		addVariantGroup(
-			3140,   // Dragon chainbody
-			12414   // Dragon chainbody (g)
-		);
-
-		// Dragon platebody variants
-		addVariantGroup(
-			21892,  // Dragon platebody
-			22242   // Dragon platebody (g)
-		);
-
-		// Dragon full helm variants
-		addVariantGroup(
-			11335,  // Dragon full helm
-			12417   // Dragon full helm (g)
-		);
-
-		// Dragon platelegs variants
-		addVariantGroup(
-			4087,   // Dragon platelegs
-			12415   // Dragon platelegs (g)
-		);
-
-		// Dragon plateskirt variants
-		addVariantGroup(
-			4585,   // Dragon plateskirt
-			12416   // Dragon plateskirt (g)
-		);
-
-		// Dragon sq shield variants
-		addVariantGroup(
-			1187,   // Dragon sq shield
-			12418   // Dragon sq shield (g)
-		);
-
-		// Dragon kiteshield variants
-		addVariantGroup(
-			22002,  // Dragon kiteshield
-			22244   // Dragon kiteshield (g)
-		);
-
 		// ==================== ABYSSAL WHIP ====================
 
-		addVariantGroup(
-			4151,   // Abyssal whip
-			12773,  // Volcanic abyssal whip
-			12774   // Frozen abyssal whip
-		);
-
-		// ==================== DARK BOW ====================
-
-		addVariantGroup(
-			11235,  // Dark bow
-			12765,  // Dark bow (green)
-			12766,  // Dark bow (blue)
-			12767,  // Dark bow (yellow)
-			12768   // Dark bow (white)
-		);
-
-		// ==================== TOOLS ====================
-
-		// Dragon pickaxe variants
-		addVariantGroup(
-			11920,  // Dragon pickaxe
-			12797,  // Dragon pickaxe (or)
-			23677,  // Infernal pickaxe (charged)
-			13243,  // Infernal pickaxe (uncharged)
-			23680   // Crystal pickaxe
-		);
-
-		// Dragon axe variants
-		addVariantGroup(
-			6739,   // Dragon axe
-			12807,  // Dragon axe (or)
-			23673,  // Infernal axe (charged)
-			13241,  // Infernal axe (uncharged)
-			23675   // Crystal axe
-		);
-
-		// Dragon harpoon variants
-		addVariantGroup(
-			21028,  // Dragon harpoon
-			21031,  // Dragon harpoon (or)
-			23762,  // Infernal harpoon (charged)
-			21033,  // Infernal harpoon (uncharged)
-			23764   // Crystal harpoon
-		);
-
-		// ==================== PROSPECTOR KIT ====================
-
-		addVariantGroup(
-			12013,  // Prospector helmet
-			25549   // Golden prospector helmet
-		);
-		addVariantGroup(
-			12014,  // Prospector jacket
-			25551   // Golden prospector jacket
-		);
-		addVariantGroup(
-			12015,  // Prospector legs
-			25553   // Golden prospector legs
-		);
-		addVariantGroup(
-			12016,  // Prospector boots
-			25555   // Golden prospector boots
-		);
-
-		// ==================== INFINITY ROBES ====================
-
-		// Infinity hat variants
-		addVariantGroup(
-			6918,   // Infinity hat
-			12457,  // Dark infinity hat
-			12419   // Light infinity hat
-		);
-
-		// Infinity top variants
-		addVariantGroup(
-			6916,   // Infinity top
-			12458,  // Dark infinity top
-			12420   // Light infinity top
-		);
-
-		// Infinity bottoms variants
-		addVariantGroup(
-			6924,   // Infinity bottoms
-			12459,  // Dark infinity bottoms
-			12421   // Light infinity bottoms
-		);
-
-		// ==================== ANCESTRAL ROBES ====================
-
-		// Ancestral hat variants
-		addVariantGroup(
-			21018,  // Ancestral hat
-			24664   // Twisted ancestral hat
-		);
-
-		// Ancestral robe top variants
-		addVariantGroup(
-			21021,  // Ancestral robe top
-			24666   // Twisted ancestral robe top
-		);
-
-		// Ancestral robe bottom variants
-		addVariantGroup(
-			21024,  // Ancestral robe bottom
-			24668   // Twisted ancestral robe bottom
-		);
-
-		// ==================== VOID KNIGHT EQUIPMENT ====================
-
-		// Void knight top variants
-		addVariantGroup(
-			8839,   // Void knight top
-			13072   // Elite void top
-		);
-
-		// Void knight robe variants
-		addVariantGroup(
-			8840,   // Void knight robe
-			13073   // Elite void robe
-		);
-
-		// ==================== GOD CAPES ====================
-
-		// Saradomin cape variants
-		addVariantGroup(
-			2412,   // Saradomin cape
-			21791   // Imbued saradomin cape
-		);
-
-		// Zamorak cape variants
-		addVariantGroup(
-			2413,   // Zamorak cape
-			21795   // Imbued zamorak cape
-		);
-
-		// Guthix cape variants
-		addVariantGroup(
-			2414,   // Guthix cape
-			21793   // Imbued guthix cape
-		);
-
-		// ==================== SALVE AMULET ====================
-
-		addVariantGroup(
-			4081,   // Salve amulet
-			10588,  // Salve amulet (e)
-			12017,  // Salve amulet(i)
-			12018   // Salve amulet(ei)
-		);
-
-		// ==================== BLACK MASK ====================
-
-		addVariantGroup(
-			8901,   // Black mask (10)
-			8903,   // Black mask (9)
-			8905,   // Black mask (8)
-			8907,   // Black mask (7)
-			8909,   // Black mask (6)
-			8911,   // Black mask (5)
-			8913,   // Black mask (4)
-			8915,   // Black mask (3)
-			8917,   // Black mask (2)
-			8919,   // Black mask (1)
-			8921,   // Black mask
-			8923,   // Black mask (i)
-			// Note: Black mask charges are separate variants for banking purposes
-			// but all uncharged masks map to slayer helmet creation
-			11784,  // Black mask (i) - alternate
-			11774   // Black mask (i) - alternate
-		);
-
-		// ==================== RUNE SCIMITAR ====================
-
-		addVariantGroup(
-			1333,   // Rune scimitar
-			23330,  // Rune scimitar (guthix)
-			23332,  // Rune scimitar (saradomin)
-			23334   // Rune scimitar (zamorak)
-		);
-
-		// ==================== GRANITE MAUL ====================
-
-		addVariantGroup(
-			4153,   // Granite maul
-			12848,  // Granite maul (or)
-			24225   // Granite maul (ornate handle)
-		);
-
-		// ==================== ODIUM/MALEDICTION WARDS ====================
-
-		addVariantGroup(
-			11926,  // Odium ward
-			12807   // Odium ward (or)
-		);
-
-		addVariantGroup(
-			11924,  // Malediction ward
-			12806   // Malediction ward (or)
-		);
-
-		// ==================== STEAM/LAVA BATTLESTAFF ====================
-
-		addVariantGroup(
-			11787,  // Steam battlestaff
-			12795   // Steam battlestaff (or)
-		);
-
-		addVariantGroup(
-			11789,  // Lava battlestaff
-			21198   // Lava battlestaff (or)
-		);
-
-		// ==================== MYSTIC ROBES (All Color Variants) ====================
-
-		addVariantGroup(
-			4089,   // Mystic hat (blue)
-			4099,   // Mystic hat (dark)
-			4109,   // Mystic hat (light)
-			23047   // Mystic hat (dusk/or)
-		);
-
-		addVariantGroup(
-			4091,   // Mystic robe top (blue)
-			4101,   // Mystic robe top (dark)
-			4111,   // Mystic robe top (light)
-			23050   // Mystic robe top (dusk/or)
-		);
-
-		addVariantGroup(
-			4093,   // Mystic robe bottom (blue)
-			4103,   // Mystic robe bottom (dark)
-			4113,   // Mystic robe bottom (light)
-			23053   // Mystic robe bottom (dusk/or)
-		);
-
-		addVariantGroup(
-			4095,   // Mystic gloves (blue)
-			4105,   // Mystic gloves (dark)
-			4115,   // Mystic gloves (light)
-			23056   // Mystic gloves (dusk/or)
-		);
-
-		addVariantGroup(
-			4097,   // Mystic boots (blue)
-			4107,   // Mystic boots (dark)
-			4117,   // Mystic boots (light)
-			23059   // Mystic boots (dusk/or)
-		);
-
-		// ==================== CANNON (Shattered Relics) ====================
-
-		addVariantGroup(
-			6,      // Cannon base
-			23028   // Cannon base (or)
-		);
-
-		addVariantGroup(
-			8,      // Cannon stand
-			23031   // Cannon stand (or)
-		);
-
-		addVariantGroup(
-			10,     // Cannon barrels
-			23034   // Cannon barrels (or)
-		);
-
-		addVariantGroup(
-			12,     // Cannon furnace
-			23037   // Cannon furnace (or)
-		);
-
-		// ==================== TOXIC BLOWPIPE ====================
-
-		addVariantGroup(
-			12924,  // Toxic blowpipe (empty)
-			12926,  // Toxic blowpipe (charged)
-			28688   // Blazing blowpipe
-		);
-
-		// ==================== DINH'S BULWARK ====================
-
-		addVariantGroup(
-			21015,  // Dinh's bulwark
-			28690   // Dinh's blazing bulwark
-		);
-
-		// ==================== FIGHTER TORSO ====================
-
-		addVariantGroup(
-			10551,  // Fighter torso
-			27018   // Fighter torso (or)
-		);
-
-		// ==================== AVERNIC DEFENDER ====================
-
-		addVariantGroup(
-			22322,  // Avernic defender
-			28697   // Avernic defender (or) - deadman
-		);
-
-		// ==================== ADDITIONAL RINGS ====================
-
-		// Ring of suffering variants
-		addVariantGroup(
-			19550,  // Ring of suffering
-			19710,  // Ring of suffering (i)
-			20657,  // Ring of suffering (ri) - with recoil
-			27310   // Ring of suffering (i) - Soul Wars
-		);
-
-		// Granite ring variants
-		addVariantGroup(
-			21739,  // Granite ring
-			21752   // Granite ring (i)
-		);
-
-		// ==================== MAGIC SHORTBOW ====================
-
-		addVariantGroup(
-			861,    // Magic shortbow
-			12788   // Magic shortbow (i)
-		);
-
-		// ==================== SERPENTINE HELMS ====================
-
-		addVariantGroup(
-			12929,  // Serpentine helm (uncharged)
-			12931,  // Serpentine helm (charged)
-			13196,  // Tanzanite helm (uncharged)
-			13197,  // Tanzanite helm (charged)
-			13198,  // Magma helm (uncharged)
-			13199   // Magma helm (charged)
-		);
-
-		// ==================== THEATRE OF BLOOD WEAPONS ====================
-
-		// Ghrazi rapier variants
-		addVariantGroup(
-			22324,  // Ghrazi rapier
-			25734   // Holy ghrazi rapier
-		);
-
-		// Scythe of vitur variants
-		addVariantGroup(
-			22325,  // Scythe of vitur (charged)
-			22486,  // Scythe of vitur (uncharged)
-			25736,  // Holy scythe of vitur (charged)
-			25738,  // Holy scythe of vitur (uncharged)
-			25740,  // Sanguine scythe of vitur (charged)
-			25742   // Sanguine scythe of vitur (uncharged)
-		);
-
-		// Sanguinesti staff variants
-		addVariantGroup(
-			22323,  // Sanguinesti staff (charged)
-			22481,  // Sanguinesti staff (uncharged)
-			25731,  // Holy sanguinesti staff (charged)
-			25733   // Holy sanguinesti staff (uncharged)
-		);
-
-		// ==================== CROSSBOWS ====================
-
-		// Rune crossbow variants
-		addVariantGroup(
-			9185,   // Rune crossbow
-			23601   // Rune crossbow (or)
-		);
-
-		// Dragon crossbow variants
-		addVariantGroup(
-			21902,  // Dragon crossbow
-			28689   // Dragon crossbow (cr)
-		);
-
-		// Dragon hunter crossbow variants
-		addVariantGroup(
-			21012,  // Dragon hunter crossbow
-			28700,  // Dragon hunter crossbow (t)
-			28703   // Dragon hunter crossbow (b)
-		);
-
-		// ==================== HEAVY BALLISTA ====================
-
-		addVariantGroup(
-			19481,  // Heavy ballista
-			28701   // Heavy ballista (or)
-		);
-
-		// ==================== TZHAAR WEAPONS ====================
-
-		addVariantGroup(
-			6528,   // Tzhaar-ket-om
-			23600   // Tzhaar-ket-om (t)
+		group("Abyssal whip", "WHIP",
+			ItemID.ABYSSAL_WHIP,                                     // Abyssal whip
+			ItemID.ABYSSAL_WHIP_LAVA,                                // Volcanic abyssal whip
+			ItemID.ABYSSAL_WHIP_ICE,                                 // Frozen abyssal whip
+			ItemID.LEAGUE_3_WHIP                                     // Abyssal whip (or)
 		);
 
 		// ==================== ABYSSAL TENTACLE ====================
 
-		addVariantGroup(
-			12006,  // Abyssal tentacle
-			28699   // Abyssal tentacle (or)
+		group("Abyssal tentacle", "TENTACLE",
+			ItemID.ABYSSAL_TENTACLE,                                 // Abyssal tentacle
+			ItemID.LEAGUE_3_WHIP_TENTACLE,                           // Abyssal tentacle (or)
+			ItemID.KRAKEN_TENTACLE                                   // Kraken tentacle
 		);
 
-		// ==================== ELDER MAUL ====================
+		// ==================== DARK BOW ====================
 
-		addVariantGroup(
-			21003,  // Elder maul
-			27655   // Elder maul (or)
+		group("Dark bow", "DARKBOW",
+			ItemID.DARKBOW,                                          // Dark bow
+			ItemID.DARKBOW_GREEN,                                    // Dark bow
+			ItemID.DARKBOW_BLUE,                                     // Dark bow
+			ItemID.DARKBOW_YELLOW,                                   // Dark bow
+			ItemID.DARKBOW_WHITE                                     // Dark bow
 		);
 
-		// ==================== OSMUMTEN'S FANG ====================
+		// ==================== TOOLS ====================
 
-		addVariantGroup(
-			26219,  // Osmumten's fang
-			27246   // Osmumten's fang (or)
+		group("Dragon pickaxe, Infernal pickaxe and Crystal pickaxe", "PICKAXE",
+			ItemID.DRAGON_PICKAXE,                                   // Dragon pickaxe
+			ItemID.DRAGON_PICKAXE_PRETTY,                            // Dragon pickaxe
+			ItemID.ZALCANO_PICKAXE,                                  // Dragon pickaxe (or)
+			ItemID.INFERNAL_PICKAXE,                                 // Infernal pickaxe
+			ItemID.CRYSTAL_PICKAXE,                                  // Crystal pickaxe
+			ItemID.TRAILBLAZER_PICKAXE,                              // Infernal pickaxe (or)
+			ItemID.INFERNAL_PICKAXE_EMPTY,                           // Infernal pickaxe (uncharged)
+			ItemID.CRYSTAL_PICKAXE_INACTIVE,                         // Crystal pickaxe (inactive)
+			ItemID.TRAILBLAZER_PICKAXE_EMPTY,                        // Infernal pickaxe (uncharged)
+			ItemID.TRAILBLAZER_PICKAXE_NO_INFERNAL,                  // Dragon pickaxe (or)
+			ItemID.TRAILBLAZER_RELOADED_PICKAXE,                     // Infernal pickaxe (or)
+			ItemID.TRAILBLAZER_RELOADED_PICKAXE_EMPTY,               // Infernal pickaxe (uncharged)
+			ItemID.TRAILBLAZER_RELOADED_PICKAXE_NO_INFERNAL          // Dragon pickaxe (or)
 		);
 
-		// ==================== NEITIZNOT HELM ====================
-
-		addVariantGroup(
-			10828,  // Helm of neitiznot
-			28593   // Helm of neitiznot (or)
+		group("Dragon axe, Infernal axe and Crystal axe", "AXE",
+			ItemID.DRAGON_AXE,                                       // Dragon axe
+			ItemID.TRAILBLAZER_AXE_NO_INFERNAL,                      // Dragon axe (or)
+			ItemID.TRAILBLAZER_RELOADED_AXE_NO_INFERNAL,             // Dragon axe (or)
+			ItemID.INFERNAL_AXE,                                     // Infernal axe
+			ItemID.INFERNAL_AXE_EMPTY,                               // Infernal axe (uncharged)
+			ItemID.TRAILBLAZER_AXE_EMPTY,                            // Infernal axe (uncharged)
+			ItemID.TRAILBLAZER_RELOADED_AXE_EMPTY,                   // Infernal axe (uncharged)
+			ItemID.CRYSTAL_AXE,                                      // Crystal axe
+			ItemID.GAUNTLET_AXE,                                     // Crystal axe
+			ItemID.CRYSTAL_AXE_INACTIVE,                             // Crystal axe (inactive)
+			ItemID.TRAILBLAZER_AXE,                                  // Infernal axe (or)
+			ItemID.TRAILBLAZER_RELOADED_AXE                          // Infernal axe (or)
 		);
 
-		// ==================== ELIDINIS' WARD ====================
-
-		addVariantGroup(
-			25985,  // Elidinis' ward (f)
-			27251   // Elidinis' ward (or)
+		group("Dragon harpoon, Infernal harpoon and Crystal harpoon", "HARPOON",
+			ItemID.DRAGON_HARPOON,                                   // Dragon harpoon
+			ItemID.INFERNAL_HARPOON,                                 // Infernal harpoon
+			ItemID.CRYSTAL_HARPOON,                                  // Crystal harpoon
+			ItemID.INFERNAL_HARPOON_EMPTY,                           // Infernal harpoon (uncharged)
+			ItemID.CRYSTAL_HARPOON_INACTIVE,                         // Crystal harpoon (inactive)
+			ItemID.TRAILBLAZER_HARPOON,                              // Infernal harpoon (or)
+			ItemID.TRAILBLAZER_HARPOON_EMPTY,                        // Infernal harpoon (uncharged)
+			ItemID.TRAILBLAZER_HARPOON_NO_INFERNAL,                  // Dragon harpoon (or)
+			ItemID.TRAILBLAZER_RELOADED_HARPOON,                     // Infernal harpoon (or)
+			ItemID.TRAILBLAZER_RELOADED_HARPOON_EMPTY,               // Infernal harpoon (uncharged)
+			ItemID.TRAILBLAZER_RELOADED_HARPOON_NO_INFERNAL          // Dragon harpoon (or)
 		);
 
-		// ==================== TUMEKEN'S SHADOW ====================
+		// ==================== DRAGON EQUIPMENT ====================
 
-		addVariantGroup(
-			27275,  // Tumeken's shadow (charged)
-			27277   // Tumeken's shadow (uncharged)
+		group("Dragon defender", "DRAGON_PARRYINGDAGGER",
+			ItemID.DRAGON_PARRYINGDAGGER,                            // Dragon defender
+			ItemID.DRAGON_PARRYINGDAGGER_T,                          // Dragon defender (t)
+			ItemID.DRAGON_PARRYINGDAGGER_TROUVER                     // Dragon defender (l)
 		);
 
-		// ==================== VENATOR BOW ====================
-
-		addVariantGroup(
-			27610,  // Venator bow (charged)
-			27612,  // Venator bow (uncharged)
-			29925   // Echo venator bow
+		group("Rune defender", "RUNE_PARRYINGDAGGER",
+			ItemID.RUNE_PARRYINGDAGGER,                              // Rune defender
+			ItemID.RUNE_PARRYINGDAGGER_T,                            // Rune defender (t)
+			ItemID.RUNE_PARRYINGDAGGER_TROUVER                       // Rune defender (l)
 		);
 
-		// ==================== TORVA ARMOR ====================
-
-		// Torva full helm variants
-		addVariantGroup(
-			26382,  // Torva full helm
-			28254   // Sanguine torva full helm
+		group("Dragon scimitar", "DRAGON_SCIMITAR",
+			ItemID.DRAGON_SCIMITAR,                                  // Dragon scimitar
+			ItemID.DRAGON_SCIMITAR_ORNAMENT                          // Dragon scimitar (or)
 		);
 
-		// Torva platebody variants
-		addVariantGroup(
-			26384,  // Torva platebody
-			28256   // Sanguine torva platebody
+		group("Dragon boots", "DRAGON_BOOTS",
+			ItemID.DRAGON_BOOTS,                                     // Dragon boots
+			ItemID.DRAGON_BOOTS_GOLD                                 // Dragon boots (g)
 		);
 
-		// Torva platelegs variants
-		addVariantGroup(
-			26386,  // Torva platelegs
-			28258   // Sanguine torva platelegs
+		group("Dragon chainbody", "DRAGON_CHAINBODY",
+			ItemID.DRAGON_CHAINBODY,                                 // Dragon chainbody
+			ItemID.DRAGON_CHAINBODY_GOLD                             // Dragon chainbody (g)
 		);
 
-		// ==================== MASORI ARMOR ====================
-
-		// Masori mask variants
-		addVariantGroup(
-			27226,  // Masori mask
-			27229,  // Masori mask (f)
-			30033   // Masori mask (f) - fortified (if different)
+		group("Dragon platebody", "DRAGON_PLATEBODY",
+			ItemID.DRAGON_PLATEBODY,                                 // Dragon platebody
+			ItemID.DRAGON_PLATEBODY_GOLD                             // Dragon platebody (g)
 		);
 
-		// Masori body variants
-		addVariantGroup(
-			27232,  // Masori body
-			27235,  // Masori body (f)
-			30035   // Masori body (f) - fortified (if different)
+		group("Dragon full helm", "DRAGON_FULL_HELM",
+			ItemID.BRUT_DRAGON_FULL_HELM,                            // Dragon full helm
+			ItemID.DRAGON_FULL_HELM_GOLD                             // Dragon full helm (g)
 		);
 
-		// Masori chaps variants
-		addVariantGroup(
-			27238,  // Masori chaps
-			27241,  // Masori chaps (f)
-			30037   // Masori chaps (f) - fortified (if different)
+		group("Dragon platelegs", "DRAGON_PLATELEGS",
+			ItemID.DRAGON_PLATELEGS,                                 // Dragon platelegs
+			ItemID.DRAGON_PLATELEGS_GOLD                             // Dragon platelegs (g)
 		);
 
-		// ==================== ELDER CHAOS ROBES ====================
-
-		addVariantGroup(
-			21792,  // Elder chaos hood
-			29610   // Elder chaos hood (or)
+		group("Dragon plateskirt", "DRAGON_PLATESKIRT",
+			ItemID.DRAGON_PLATESKIRT,                                // Dragon plateskirt
+			ItemID.DRAGON_PLATESKIRT_GOLD                            // Dragon plateskirt (g)
 		);
 
-		addVariantGroup(
-			21795,  // Elder chaos top
-			29612   // Elder chaos top (or)
+		group("Dragon sq shield", "DRAGON_SQ_SHIELD",
+			ItemID.DRAGON_SQ_SHIELD,                                 // Dragon sq shield
+			ItemID.DRAGON_SQ_SHIELD_GOLD                             // Dragon sq shield (g)
 		);
 
-		addVariantGroup(
-			21798,  // Elder chaos robe
-			29614   // Elder chaos robe (or)
+		group("Dragon kiteshield", "DRAGON_KITESHIELD",
+			ItemID.DRAGON_KITESHIELD,                                // Dragon kiteshield
+			ItemID.DRAGON_KITESHIELD_GOLD                            // Dragon kiteshield (g)
 		);
 
-		// ==================== VOID ORNAMENT KIT ====================
+		// ==================== FIGHTER TORSO ====================
 
-		addVariantGroup(
-			8842,   // Void knight mage helm
-			27698   // Void knight mage helm (or)
+		group("Fighter torso", "FIGHTER_TORSO",
+			ItemID.BARBASSAULT_PENANCE_FIGHTER_TORSO,                // Fighter torso
+			ItemID.BH_BARBASSAULT_PENANCE_FIGHTER_TORSO_CORRUPTED,   // Fighter torso (or)
+			ItemID.BARBASSAULT_PENANCE_FIGHTER_TORSO_TROUVER         // Fighter torso (l)
 		);
 
-		addVariantGroup(
-			11663,  // Void knight melee helm
-			27700   // Void knight melee helm (or)
-		);
+		// ==================== DINH'S BULWARK ====================
 
-		addVariantGroup(
-			11664,  // Void knight ranger helm
-			27702   // Void knight ranger helm (or)
-		);
-
-		// ==================== IMBUED GOD CAPES (MAX CAPE VARIANTS) ====================
-
-		// Max cape fire/infernal variants
-		addVariantGroup(
-			13329,  // Fire max cape
-			21285   // Infernal max cape
-		);
-
-		// Max cape assembler variants
-		addVariantGroup(
-			22109,  // Assembler max cape
-			28785   // Masori assembler max cape
-		);
-
-		// ==================== CRYSTAL EQUIPMENT (GAUNTLET) ====================
-
-		addVariantGroup(
-			23886,  // Crystal helm (basic)
-			23887,  // Crystal helm (attuned)
-			23888   // Crystal helm (perfected)
-		);
-
-		addVariantGroup(
-			23889,  // Crystal body (basic)
-			23890,  // Crystal body (attuned)
-			23891   // Crystal body (perfected)
-		);
-
-		addVariantGroup(
-			23892,  // Crystal legs (basic)
-			23893,  // Crystal legs (attuned)
-			23894   // Crystal legs (perfected)
+		group("Dinh's bulwark", "DINHS_BULWARK",
+			ItemID.DINHS_BULWARK,                                    // Dinh's bulwark
+			ItemID.DINHS_BULWARK_ORNAMENT,                           // Dinh's blazing bulwark
+			ItemID.ROTTEN_DINHS_BULWARK                              // Dinh's blazing bulwark
 		);
 
 		// ==================== BARROWS EQUIPMENT ====================
-		// Note: Barrows items degrade - all versions are functionally equivalent
 
-		// Ahrim's hood variants
-		addVariantGroup(
-			4708,   // Ahrim's hood 0
-			4856,   // Ahrim's hood 25
-			4857,   // Ahrim's hood 50
-			4858,   // Ahrim's hood 75
-			4859    // Ahrim's hood 100
-		);
-
-		// Ahrim's staff variants
-		addVariantGroup(
-			4710,   // Ahrim's staff 0
-			4862,   // Ahrim's staff 25
-			4863,   // Ahrim's staff 50
-			4864,   // Ahrim's staff 75
-			4865    // Ahrim's staff 100
-		);
-
-		// Ahrim's robetop variants
-		addVariantGroup(
-			4712,   // Ahrim's robetop 0
-			4868,   // Ahrim's robetop 25
-			4869,   // Ahrim's robetop 50
-			4870,   // Ahrim's robetop 75
-			4871    // Ahrim's robetop 100
-		);
-
-		// Ahrim's robeskirt variants
-		addVariantGroup(
-			4714,   // Ahrim's robeskirt 0
-			4874,   // Ahrim's robeskirt 25
-			4875,   // Ahrim's robeskirt 50
-			4876,   // Ahrim's robeskirt 75
-			4877    // Ahrim's robeskirt 100
-		);
-
-		// Dharok's helm variants
-		addVariantGroup(
-			4716,   // Dharok's helm 0
-			4880,   // Dharok's helm 25
-			4881,   // Dharok's helm 50
-			4882,   // Dharok's helm 75
-			4883    // Dharok's helm 100
-		);
-
-		// Dharok's greataxe variants
-		addVariantGroup(
-			4718,   // Dharok's greataxe 0
-			4886,   // Dharok's greataxe 25
-			4887,   // Dharok's greataxe 50
-			4888,   // Dharok's greataxe 75
-			4889    // Dharok's greataxe 100
-		);
-
-		// Dharok's platebody variants
-		addVariantGroup(
-			4720,   // Dharok's platebody 0
-			4892,   // Dharok's platebody 25
-			4893,   // Dharok's platebody 50
-			4894,   // Dharok's platebody 75
-			4895    // Dharok's platebody 100
-		);
-
-		// Dharok's platelegs variants
-		addVariantGroup(
-			4722,   // Dharok's platelegs 0
-			4898,   // Dharok's platelegs 25
-			4899,   // Dharok's platelegs 50
-			4900,   // Dharok's platelegs 75
-			4901    // Dharok's platelegs 100
-		);
-
-		// Guthan's helm variants
-		addVariantGroup(
-			4724,   // Guthan's helm 0
-			4904,   // Guthan's helm 25
-			4905,   // Guthan's helm 50
-			4906,   // Guthan's helm 75
-			4907    // Guthan's helm 100
-		);
-
-		// Guthan's warspear variants
-		addVariantGroup(
-			4726,   // Guthan's warspear 0
-			4910,   // Guthan's warspear 25
-			4911,   // Guthan's warspear 50
-			4912,   // Guthan's warspear 75
-			4913    // Guthan's warspear 100
-		);
-
-		// Guthan's platebody variants
-		addVariantGroup(
-			4728,   // Guthan's platebody 0
-			4916,   // Guthan's platebody 25
-			4917,   // Guthan's platebody 50
-			4918,   // Guthan's platebody 75
-			4919    // Guthan's platebody 100
-		);
-
-		// Guthan's chainskirt variants
-		addVariantGroup(
-			4730,   // Guthan's chainskirt 0
-			4922,   // Guthan's chainskirt 25
-			4923,   // Guthan's chainskirt 50
-			4924,   // Guthan's chainskirt 75
-			4925    // Guthan's chainskirt 100
-		);
-
-		// Karil's coif variants
-		addVariantGroup(
-			4732,   // Karil's coif 0
-			4928,   // Karil's coif 25
-			4929,   // Karil's coif 50
-			4930,   // Karil's coif 75
-			4931    // Karil's coif 100
-		);
-
-		// Karil's crossbow variants
-		addVariantGroup(
-			4734,   // Karil's crossbow 0
-			4934,   // Karil's crossbow 25
-			4935,   // Karil's crossbow 50
-			4936,   // Karil's crossbow 75
-			4937    // Karil's crossbow 100
-		);
-
-		// Karil's leathertop variants
-		addVariantGroup(
-			4736,   // Karil's leathertop 0
-			4940,   // Karil's leathertop 25
-			4941,   // Karil's leathertop 50
-			4942,   // Karil's leathertop 75
-			4943    // Karil's leathertop 100
-		);
-
-		// Karil's leatherskirt variants
-		addVariantGroup(
-			4738,   // Karil's leatherskirt 0
-			4946,   // Karil's leatherskirt 25
-			4947,   // Karil's leatherskirt 50
-			4948,   // Karil's leatherskirt 75
-			4949    // Karil's leatherskirt 100
-		);
-
-		// Torag's helm variants
-		addVariantGroup(
-			4745,   // Torag's helm 0
-			4952,   // Torag's helm 25
-			4953,   // Torag's helm 50
-			4954,   // Torag's helm 75
-			4955    // Torag's helm 100
-		);
-
-		// Torag's hammers variants
-		addVariantGroup(
-			4747,   // Torag's hammers 0
-			4958,   // Torag's hammers 25
-			4959,   // Torag's hammers 50
-			4960,   // Torag's hammers 75
-			4961    // Torag's hammers 100
-		);
-
-		// Torag's platebody variants
-		addVariantGroup(
-			4749,   // Torag's platebody 0
-			4964,   // Torag's platebody 25
-			4965,   // Torag's platebody 50
-			4966,   // Torag's platebody 75
-			4967    // Torag's platebody 100
-		);
-
-		// Torag's platelegs variants
-		addVariantGroup(
-			4751,   // Torag's platelegs 0
-			4970,   // Torag's platelegs 25
-			4971,   // Torag's platelegs 50
-			4972,   // Torag's platelegs 75
-			4973    // Torag's platelegs 100
-		);
-
-		// Verac's helm variants
-		addVariantGroup(
-			4753,   // Verac's helm 0
-			4976,   // Verac's helm 25
-			4977,   // Verac's helm 50
-			4978,   // Verac's helm 75
-			4979    // Verac's helm 100
-		);
-
-		// Verac's flail variants
-		addVariantGroup(
-			4755,   // Verac's flail 0
-			4982,   // Verac's flail 25
-			4983,   // Verac's flail 50
-			4984,   // Verac's flail 75
-			4985    // Verac's flail 100
-		);
-
-		// Verac's brassard variants
-		addVariantGroup(
-			4757,   // Verac's brassard 0
-			4988,   // Verac's brassard 25
-			4989,   // Verac's brassard 50
-			4990,   // Verac's brassard 75
-			4991    // Verac's brassard 100
-		);
-
-		// Verac's plateskirt variants
-		addVariantGroup(
-			4759,   // Verac's plateskirt 0
-			4994,   // Verac's plateskirt 25
-			4995,   // Verac's plateskirt 50
-			4996,   // Verac's plateskirt 75
-			4997    // Verac's plateskirt 100
-		);
-
-		// ==================== INFERNAL CAPE ====================
-
-		addVariantGroup(
-			21295,  // Infernal cape
-			27016,  // Infernal cape (or)
-			24224   // Infernal cape (l) - locked
-		);
-
-		// ==================== GOD BOOKS ====================
-
-		addVariantGroup(
-			3840,   // Holy book
-			26496   // Holy book (or)
-		);
-
-		addVariantGroup(
-			3842,   // Unholy book
-			26498   // Unholy book (or)
-		);
-
-		addVariantGroup(
-			3844,   // Book of balance
-			26488   // Book of balance (or)
-		);
-
-		addVariantGroup(
-			12608,  // Book of war
-			26494   // Book of war (or)
-		);
-
-		addVariantGroup(
-			12610,  // Book of law
-			26492   // Book of law (or)
-		);
-
-		addVariantGroup(
-			12612,  // Book of darkness
-			26490   // Book of darkness (or)
-		);
-
-		// ==================== CHARGED/UNCHARGED ITEMS ====================
-
-		// Bracelet of ethereum
-		addVariantGroup(
-			21816,  // Bracelet of ethereum (charged)
-			21817   // Bracelet of ethereum (uncharged)
-		);
-
-		// Ring of endurance
-		addVariantGroup(
-			24736,  // Ring of endurance (charged)
-			24844   // Ring of endurance (uncharged)
-		);
-
-		// Celestial ring
-		addVariantGroup(
-			25539,  // Celestial ring (uncharged)
-			25541   // Celestial ring (charged)
-		);
-
-		// Pharaoh's sceptre (all variants consolidated)
-		addVariantGroup(
-			9044,   // Pharaoh's sceptre (3)
-			9046,   // Pharaoh's sceptre (2)
-			9048,   // Pharaoh's sceptre (1)
-			9050,   // Pharaoh's sceptre (uncharged)
-			26945,  // Pharaoh's sceptre (or) (uncharged)
-			26948,  // Pharaoh's sceptre (or) (full)
-			26950,  // Pharaoh's sceptre (or) (3)
-			26952,  // Pharaoh's sceptre (or) (2)
-			26954,  // Pharaoh's sceptre (or) (1)
-			26956   // Pharaoh's sceptre (or) (uncharged alt)
-		);
-
-		// ==================== REVENANT / WILDERNESS WEAPONS ====================
-
-		// Craw's bow / Webweaver bow
-		addVariantGroup(
-			22547,  // Craw's bow (u)
-			22550,  // Craw's bow (charged)
-			27652,  // Webweaver bow (uncharged)
-			27655   // Webweaver bow (charged)
-		);
-
-		// Thammaron's sceptre / Accursed sceptre
-		addVariantGroup(
-			22552,  // Thammaron's sceptre (u)
-			22555,  // Thammaron's sceptre (charged)
-			27662,  // Accursed sceptre (uncharged)
-			27665   // Accursed sceptre (charged)
-		);
-
-		// Viggora's chainmace / Ursine chainmace
-		addVariantGroup(
-			22542,  // Viggora's chainmace (u)
-			22545,  // Viggora's chainmace (charged)
-			27657,  // Ursine chainmace (uncharged)
-			27660   // Ursine chainmace (charged)
-		);
-
-		// ==================== ARCLIGHT/DARKLIGHT ====================
-
-		addVariantGroup(
-			6746,   // Darklight
-			19675,  // Arclight (charged)
-			30305   // Arclight (inactive)
-		);
-
-		// ==================== LOCKED ITEMS (TROUVER PARCHMENT) ====================
-
-		// Fire cape locked
-		addVariantGroup(
-			6570,   // Fire cape
-			24223,  // Fire cape (l)
-			27014,  // Fire cape (or)
-			13329   // Fire max cape
-		);
-
-		// Void knight top locked
-		addVariantGroup(
-			8839,   // Void knight top
-			13072,  // Elite void top
-			24177   // Void knight top (l)
-		);
-
-		// ==================== MAX CAPE VARIANTS ====================
-
-		// Base max cape and god variants
-		addVariantGroup(
-			13280,  // Max cape
-			13331,  // Saradomin max cape
-			13333,  // Zamorak max cape
-			13335,  // Guthix max cape
-			21776,  // Imbued saradomin max cape
-			21780,  // Imbued zamorak max cape
-			21784   // Imbued guthix max cape
-		);
-
-		// Accumulator/Assembler max capes
-		addVariantGroup(
-			10499,  // Ava's accumulator
-			22109,  // Ava's assembler
-			13337,  // Accumulator max cape
-			22109   // Assembler max cape (uses same as assembler base?)
-		);
-
-		// Mythical max cape
-		addVariantGroup(
-			22114,  // Mythical cape
-			24855   // Mythical max cape
-		);
-
-		// ==================== ACHIEVEMENT DIARY ITEMS ====================
-
-		// Explorer's ring variants
-		addVariantGroup(
-			13125,  // Explorer's ring 1
-			13126,  // Explorer's ring 2
-			13127,  // Explorer's ring 3
-			13128   // Explorer's ring 4
-		);
-
-		// Ardougne cloak variants
-		addVariantGroup(
-			13121,  // Ardougne cloak 1
-			13122,  // Ardougne cloak 2
-			13123,  // Ardougne cloak 3
-			13124   // Ardougne cloak 4
-		);
-
-		// Desert amulet variants
-		addVariantGroup(
-			13133,  // Desert amulet 1
-			13134,  // Desert amulet 2
-			13135,  // Desert amulet 3
-			13136   // Desert amulet 4
-		);
-
-		// Falador shield variants
-		addVariantGroup(
-			13117,  // Falador shield 1
-			13118,  // Falador shield 2
-			13119,  // Falador shield 3
-			13120   // Falador shield 4
-		);
-
-		// Fremennik sea boots variants
-		addVariantGroup(
-			13129,  // Fremennik sea boots 1
-			13130,  // Fremennik sea boots 2
-			13131,  // Fremennik sea boots 3
-			13132   // Fremennik sea boots 4
-		);
-
-		// Kandarin headgear variants
-		addVariantGroup(
-			13137,  // Kandarin headgear 1
-			13138,  // Kandarin headgear 2
-			13139,  // Kandarin headgear 3
-			13140   // Kandarin headgear 4
-		);
-
-		// Karamja gloves variants
-		addVariantGroup(
-			11136,  // Karamja gloves 1
-			11138,  // Karamja gloves 2
-			11140,  // Karamja gloves 3
-			13103   // Karamja gloves 4
-		);
-
-		// Morytania legs variants
-		addVariantGroup(
-			13112,  // Morytania legs 1
-			13113,  // Morytania legs 2
-			13114,  // Morytania legs 3
-			13115   // Morytania legs 4
-		);
-
-		// Varrock armour variants
-		addVariantGroup(
-			13104,  // Varrock armour 1
-			13105,  // Varrock armour 2
-			13106,  // Varrock armour 3
-			13107   // Varrock armour 4
-		);
-
-		// Western banner variants
-		addVariantGroup(
-			13141,  // Western banner 1
-			13142,  // Western banner 2
-			13143,  // Western banner 3
-			13144   // Western banner 4
-		);
-
-		// Wilderness sword variants
-		addVariantGroup(
-			13108,  // Wilderness sword 1
-			13109,  // Wilderness sword 2
-			13110,  // Wilderness sword 3
-			13111   // Wilderness sword 4
-		);
-
-		// Rada's blessing variants
-		addVariantGroup(
-			22941,  // Rada's blessing 1
-			22943,  // Rada's blessing 2
-			22945,  // Rada's blessing 3
-			22947   // Rada's blessing 4
-		);
-
-		// ==================== CHOMPY BIRD HATS ====================
-
-		addVariantGroup(
-			2978,   // Ogre bowman hat
-			2979,   // Bowman hat
-			2980,   // Ogre yeoman hat
-			2981,   // Yeoman hat
-			2982,   // Ogre marksman hat
-			2983,   // Marksman hat
-			2984,   // Ogre woodsman hat
-			2985,   // Woodsman hat
-			2986,   // Ogre forester hat
-			2987,   // Forester hat
-			2988,   // Ogre bowmaster hat
-			2989,   // Bowmaster hat
-			2990,   // Ogre expert hat
-			2991,   // Expert hat
-			2992,   // Ogre dragon archer hat
-			2993,   // Dragon archer hat
-			2994,   // Expert ogre dragon archer hat
-			2995    // Expert dragon archer hat
-		);
-
-		// ==================== RUNE POUCH ====================
-
-		addVariantGroup(
-			12791,  // Rune pouch
-			24416   // Rune pouch (l)
-		);
-
-		// ==================== MORE LOCKED ITEMS ====================
-
-		// Dragon defender locked
-		addVariantGroup(
-			12954,  // Dragon defender
-			19722,  // Dragon defender (t)
-			24143   // Dragon defender (l)
-		);
-
-		// Rune defender locked
-		addVariantGroup(
-			8850,   // Rune defender
-			23230,  // Rune defender (t)
-			24142   // Rune defender (l)
-		);
-
-		// Fighter torso locked
-		addVariantGroup(
-			10551,  // Fighter torso
-			27018,  // Fighter torso (or)
-			24175   // Fighter torso (l)
-		);
-
-		// Void knight robe locked
-		addVariantGroup(
-			8840,   // Void knight robe
-			13073,  // Elite void robe
-			24179,  // Void knight robe (l)
-			24180   // Elite void robe (l)
-		);
-
-		// Void knight gloves locked
-		addVariantGroup(
-			8842,   // Void knight gloves
-			24182   // Void knight gloves (l)
-		);
-
-		// Elite void top locked
-		addVariantGroup(
-			13072,  // Elite void top
-			24178   // Elite void top (l)
-		);
-
-		// ==================== IMBUED/SATURATED HEART ====================
-
-		addVariantGroup(
-			20724,  // Imbued heart
-			27641   // Saturated heart
-		);
-
-		// ==================== TRIDENTS ====================
-
-		// Trident of the seas
-		addVariantGroup(
-			11905,  // Trident of the seas (full)
-			11907,  // Trident of the seas (partial)
-			11908   // Uncharged trident
-		);
-
-		// Trident of the swamp
-		addVariantGroup(
-			12899,  // Trident of the swamp (charged)
-			12900   // Toxic trident (uncharged)
-		);
-
-		// ==================== STAFF OF THE DEAD VARIANTS ====================
-
-		addVariantGroup(
-			11791,  // Staff of the dead
-			22296,  // Staff of light
-			12902,  // Toxic staff of the dead (uncharged)
-			12904   // Toxic staff of the dead (charged)
-		);
-
-		// ==================== AMULET OF THE DAMNED ====================
-
-		addVariantGroup(
-			12851,  // Amulet of the damned (full)
-			12853   // Amulet of the damned (degraded)
-		);
-
-		// ==================== SLAYER RINGS ====================
-
-		addVariantGroup(
-			11866,  // Slayer ring (8)
-			11867,  // Slayer ring (7)
-			11868,  // Slayer ring (6)
-			11869,  // Slayer ring (5)
-			11870,  // Slayer ring (4)
-			11871,  // Slayer ring (3)
-			11872,  // Slayer ring (2)
-			11873   // Slayer ring (1)
-		);
-
-		// ==================== CRYSTAL EQUIPMENT (SONG OF THE ELVES) ====================
-
-		// Crystal bow
-		addVariantGroup(
-			23983,  // Crystal bow (active)
-			23985,  // Crystal bow (inactive)
-			24123   // Crystal bow (new)
-		);
-
-		// Crystal shield
-		addVariantGroup(
-			23991,  // Crystal shield (active)
-			23993,  // Crystal shield (inactive)
-			24127   // Crystal shield (new)
-		);
-
-		// Crystal halberd
-		addVariantGroup(
-			23987,  // Crystal halberd (active)
-			23989,  // Crystal halberd (inactive)
-			24125   // Crystal halberd (new)
-		);
-
-		// Blade of saeldor
-		addVariantGroup(
-			23995,  // Blade of saeldor (charged)
-			23997   // Blade of saeldor (inactive)
-		);
-
-		// Bow of faerdhinen
-		addVariantGroup(
-			25862,  // Bow of faerdhinen (inactive)
-			25865   // Bow of faerdhinen (charged)
+		group("Ahrim's hood", "AHRIM_HEAD",
+			ItemID.BARROWS_AHRIM_HEAD,                               // Ahrim's hood
+			ItemID.BARROWS_AHRIM_HEAD_100,                           // Ahrim's hood 100
+			ItemID.BARROWS_AHRIM_HEAD_75,                            // Ahrim's hood 75
+			ItemID.BARROWS_AHRIM_HEAD_50,                            // Ahrim's hood 50
+			ItemID.BARROWS_AHRIM_HEAD_25,                            // Ahrim's hood 25
+			ItemID.BARROWS_AHRIM_HEAD_ORNAMENT                       // Echo ahrim's hood
+		);
+
+		group("Ahrim's staff", "AHRIM_WEAPON",
+			ItemID.BARROWS_AHRIM_WEAPON,                             // Ahrim's staff
+			ItemID.BARROWS_AHRIM_WEAPON_100,                         // Ahrim's staff 100
+			ItemID.BARROWS_AHRIM_WEAPON_75,                          // Ahrim's staff 75
+			ItemID.BARROWS_AHRIM_WEAPON_50,                          // Ahrim's staff 50
+			ItemID.BARROWS_AHRIM_WEAPON_25,                          // Ahrim's staff 25
+			ItemID.BARROWS_AHRIM_WEAPON_ORNAMENT                     // Echo ahrim's staff
+		);
+
+		group("Ahrim's robetop", "AHRIM_BODY",
+			ItemID.BARROWS_AHRIM_BODY,                               // Ahrim's robetop
+			ItemID.BARROWS_AHRIM_BODY_100,                           // Ahrim's robetop 100
+			ItemID.BARROWS_AHRIM_BODY_75,                            // Ahrim's robetop 75
+			ItemID.BARROWS_AHRIM_BODY_50,                            // Ahrim's robetop 50
+			ItemID.BARROWS_AHRIM_BODY_25,                            // Ahrim's robetop 25
+			ItemID.BARROWS_AHRIM_BODY_ORNAMENT                       // Echo ahrim's robetop
+		);
+
+		group("Ahrim's robeskirt", "AHRIM_LEGS",
+			ItemID.BARROWS_AHRIM_LEGS,                               // Ahrim's robeskirt
+			ItemID.BARROWS_AHRIM_LEGS_100,                           // Ahrim's robeskirt 100
+			ItemID.BARROWS_AHRIM_LEGS_75,                            // Ahrim's robeskirt 75
+			ItemID.BARROWS_AHRIM_LEGS_50,                            // Ahrim's robeskirt 50
+			ItemID.BARROWS_AHRIM_LEGS_25,                            // Ahrim's robeskirt 25
+			ItemID.BARROWS_AHRIM_LEGS_ORNAMENT                       // Echo ahrim's robeskirt
+		);
+
+		group("Dharok's helm", "BARROWS_DHAROK_HEAD",
+			ItemID.BARROWS_DHAROK_HEAD,                              // Dharok's helm
+			ItemID.BARROWS_DHAROK_HEAD_100,                          // Dharok's helm 100
+			ItemID.BARROWS_DHAROK_HEAD_75,                           // Dharok's helm 75
+			ItemID.BARROWS_DHAROK_HEAD_50,                           // Dharok's helm 50
+			ItemID.BARROWS_DHAROK_HEAD_25                            // Dharok's helm 25
+		);
+
+		group("Dharok's greataxe", "BARROWS_DHAROK_WEAPON",
+			ItemID.BARROWS_DHAROK_WEAPON,                            // Dharok's greataxe
+			ItemID.BARROWS_DHAROK_WEAPON_100,                        // Dharok's greataxe 100
+			ItemID.BARROWS_DHAROK_WEAPON_75,                         // Dharok's greataxe 75
+			ItemID.BARROWS_DHAROK_WEAPON_50,                         // Dharok's greataxe 50
+			ItemID.BARROWS_DHAROK_WEAPON_25                          // Dharok's greataxe 25
+		);
+
+		group("Dharok's platebody", "BARROWS_DHAROK_BODY",
+			ItemID.BARROWS_DHAROK_BODY,                              // Dharok's platebody
+			ItemID.BARROWS_DHAROK_BODY_100,                          // Dharok's platebody 100
+			ItemID.BARROWS_DHAROK_BODY_75,                           // Dharok's platebody 75
+			ItemID.BARROWS_DHAROK_BODY_50,                           // Dharok's platebody 50
+			ItemID.BARROWS_DHAROK_BODY_25                            // Dharok's platebody 25
+		);
+
+		group("Dharok's platelegs", "BARROWS_DHAROK_LEGS",
+			ItemID.BARROWS_DHAROK_LEGS,                              // Dharok's platelegs
+			ItemID.BARROWS_DHAROK_LEGS_100,                          // Dharok's platelegs 100
+			ItemID.BARROWS_DHAROK_LEGS_75,                           // Dharok's platelegs 75
+			ItemID.BARROWS_DHAROK_LEGS_50,                           // Dharok's platelegs 50
+			ItemID.BARROWS_DHAROK_LEGS_25                            // Dharok's platelegs 25
+		);
+
+		group("Guthan's helm", "BARROWS_GUTHAN_HEAD",
+			ItemID.BARROWS_GUTHAN_HEAD,                              // Guthan's helm
+			ItemID.BARROWS_GUTHAN_HEAD_100,                          // Guthan's helm 100
+			ItemID.BARROWS_GUTHAN_HEAD_75,                           // Guthan's helm 75
+			ItemID.BARROWS_GUTHAN_HEAD_50,                           // Guthan's helm 50
+			ItemID.BARROWS_GUTHAN_HEAD_25                            // Guthan's helm 25
+		);
+
+		group("Guthan's warspear", "BARROWS_GUTHAN_WEAPON",
+			ItemID.BARROWS_GUTHAN_WEAPON,                            // Guthan's warspear
+			ItemID.BARROWS_GUTHAN_WEAPON_100,                        // Guthan's warspear 100
+			ItemID.BARROWS_GUTHAN_WEAPON_75,                         // Guthan's warspear 75
+			ItemID.BARROWS_GUTHAN_WEAPON_50,                         // Guthan's warspear 50
+			ItemID.BARROWS_GUTHAN_WEAPON_25                          // Guthan's warspear 25
+		);
+
+		group("Guthan's platebody", "BARROWS_GUTHAN_BODY",
+			ItemID.BARROWS_GUTHAN_BODY,                              // Guthan's platebody
+			ItemID.BARROWS_GUTHAN_BODY_100,                          // Guthan's platebody 100
+			ItemID.BARROWS_GUTHAN_BODY_75,                           // Guthan's platebody 75
+			ItemID.BARROWS_GUTHAN_BODY_50,                           // Guthan's platebody 50
+			ItemID.BARROWS_GUTHAN_BODY_25                            // Guthan's platebody 25
+		);
+
+		group("Guthan's chainskirt", "BARROWS_GUTHAN_LEGS",
+			ItemID.BARROWS_GUTHAN_LEGS,                              // Guthan's chainskirt
+			ItemID.BARROWS_GUTHAN_LEGS_100,                          // Guthan's chainskirt 100
+			ItemID.BARROWS_GUTHAN_LEGS_75,                           // Guthan's chainskirt 75
+			ItemID.BARROWS_GUTHAN_LEGS_50,                           // Guthan's chainskirt 50
+			ItemID.BARROWS_GUTHAN_LEGS_25                            // Guthan's chainskirt 25
+		);
+
+		group("Karil's coif", "BARROWS_KARIL_HEAD",
+			ItemID.BARROWS_KARIL_HEAD,                               // Karil's coif
+			ItemID.BARROWS_KARIL_HEAD_100,                           // Karil's coif 100
+			ItemID.BARROWS_KARIL_HEAD_75,                            // Karil's coif 75
+			ItemID.BARROWS_KARIL_HEAD_50,                            // Karil's coif 50
+			ItemID.BARROWS_KARIL_HEAD_25                             // Karil's coif 25
+		);
+
+		group("Karil's crossbow", "BARROWS_KARIL_WEAPON",
+			ItemID.BARROWS_KARIL_WEAPON,                             // Karil's crossbow
+			ItemID.BARROWS_KARIL_WEAPON_100,                         // Karil's crossbow 100
+			ItemID.BARROWS_KARIL_WEAPON_75,                          // Karil's crossbow 75
+			ItemID.BARROWS_KARIL_WEAPON_50,                          // Karil's crossbow 50
+			ItemID.BARROWS_KARIL_WEAPON_25                           // Karil's crossbow 25
+		);
+
+		group("Karil's leathertop", "BARROWS_KARIL_BODY",
+			ItemID.BARROWS_KARIL_BODY,                               // Karil's leathertop
+			ItemID.BARROWS_KARIL_BODY_100,                           // Karil's leathertop 100
+			ItemID.BARROWS_KARIL_BODY_75,                            // Karil's leathertop 75
+			ItemID.BARROWS_KARIL_BODY_50,                            // Karil's leathertop 50
+			ItemID.BARROWS_KARIL_BODY_25                             // Karil's leathertop 25
+		);
+
+		group("Karil's leatherskirt", "BARROWS_KARIL_LEGS",
+			ItemID.BARROWS_KARIL_LEGS,                               // Karil's leatherskirt
+			ItemID.BARROWS_KARIL_LEGS_100,                           // Karil's leatherskirt 100
+			ItemID.BARROWS_KARIL_LEGS_75,                            // Karil's leatherskirt 75
+			ItemID.BARROWS_KARIL_LEGS_50,                            // Karil's leatherskirt 50
+			ItemID.BARROWS_KARIL_LEGS_25                             // Karil's leatherskirt 25
+		);
+
+		group("Torag's helm", "BARROWS_TORAG_HEAD",
+			ItemID.BARROWS_TORAG_HEAD,                               // Torag's helm
+			ItemID.BARROWS_TORAG_HEAD_100,                           // Torag's helm 100
+			ItemID.BARROWS_TORAG_HEAD_75,                            // Torag's helm 75
+			ItemID.BARROWS_TORAG_HEAD_50,                            // Torag's helm 50
+			ItemID.BARROWS_TORAG_HEAD_25                             // Torag's helm 25
+		);
+
+		group("Torag's hammers", "BARROWS_TORAG_WEAPON",
+			ItemID.BARROWS_TORAG_WEAPON,                             // Torag's hammers
+			ItemID.BARROWS_TORAG_WEAPON_100,                         // Torag's hammers 100
+			ItemID.BARROWS_TORAG_WEAPON_75,                          // Torag's hammers 75
+			ItemID.BARROWS_TORAG_WEAPON_50,                          // Torag's hammers 50
+			ItemID.BARROWS_TORAG_WEAPON_25                           // Torag's hammers 25
+		);
+
+		group("Torag's platebody", "BARROWS_TORAG_BODY",
+			ItemID.BARROWS_TORAG_BODY,                               // Torag's platebody
+			ItemID.BARROWS_TORAG_BODY_100,                           // Torag's platebody 100
+			ItemID.BARROWS_TORAG_BODY_75,                            // Torag's platebody 75
+			ItemID.BARROWS_TORAG_BODY_50,                            // Torag's platebody 50
+			ItemID.BARROWS_TORAG_BODY_25                             // Torag's platebody 25
+		);
+
+		group("Torag's platelegs", "BARROWS_TORAG_LEGS",
+			ItemID.BARROWS_TORAG_LEGS,                               // Torag's platelegs
+			ItemID.BARROWS_TORAG_LEGS_100,                           // Torag's platelegs 100
+			ItemID.BARROWS_TORAG_LEGS_75,                            // Torag's platelegs 75
+			ItemID.BARROWS_TORAG_LEGS_50,                            // Torag's platelegs 50
+			ItemID.BARROWS_TORAG_LEGS_25                             // Torag's platelegs 25
+		);
+
+		group("Verac's helm", "BARROWS_VERAC_HEAD",
+			ItemID.BARROWS_VERAC_HEAD,                               // Verac's helm
+			ItemID.BARROWS_VERAC_HEAD_100,                           // Verac's helm 100
+			ItemID.BARROWS_VERAC_HEAD_75,                            // Verac's helm 75
+			ItemID.BARROWS_VERAC_HEAD_50,                            // Verac's helm 50
+			ItemID.BARROWS_VERAC_HEAD_25                             // Verac's helm 25
+		);
+
+		group("Verac's flail", "BARROWS_VERAC_WEAPON",
+			ItemID.BARROWS_VERAC_WEAPON,                             // Verac's flail
+			ItemID.BARROWS_VERAC_WEAPON_100,                         // Verac's flail 100
+			ItemID.BARROWS_VERAC_WEAPON_75,                          // Verac's flail 75
+			ItemID.BARROWS_VERAC_WEAPON_50,                          // Verac's flail 50
+			ItemID.BARROWS_VERAC_WEAPON_25                           // Verac's flail 25
+		);
+
+		group("Verac's brassard", "BARROWS_VERAC_BODY",
+			ItemID.BARROWS_VERAC_BODY,                               // Verac's brassard
+			ItemID.BARROWS_VERAC_BODY_100,                           // Verac's brassard 100
+			ItemID.BARROWS_VERAC_BODY_75,                            // Verac's brassard 75
+			ItemID.BARROWS_VERAC_BODY_50,                            // Verac's brassard 50
+			ItemID.BARROWS_VERAC_BODY_25                             // Verac's brassard 25
+		);
+
+		group("Verac's plateskirt", "BARROWS_VERAC_LEGS",
+			ItemID.BARROWS_VERAC_LEGS,                               // Verac's plateskirt
+			ItemID.BARROWS_VERAC_LEGS_100,                           // Verac's plateskirt 100
+			ItemID.BARROWS_VERAC_LEGS_75,                            // Verac's plateskirt 75
+			ItemID.BARROWS_VERAC_LEGS_50,                            // Verac's plateskirt 50
+			ItemID.BARROWS_VERAC_LEGS_25                             // Verac's plateskirt 25
 		);
 
 		// ==================== AMULET OF GLORY ====================
 
-		addVariantGroup(
-			1704,   // Amulet of glory (uncharged)
-			1706,   // Amulet of glory (1)
-			1708,   // Amulet of glory (2)
-			1710,   // Amulet of glory (3)
-			1712,   // Amulet of glory (4)
-			11976,  // Amulet of glory (5)
-			11978   // Amulet of glory (6)
+		group("Amulet of glory", "AMULET_OF_GLORY",
+			ItemID.AMULET_OF_GLORY,                                  // Amulet of glory
+			ItemID.AMULET_OF_GLORY_1,                                // Amulet of glory(1)
+			ItemID.AMULET_OF_GLORY_2,                                // Amulet of glory(2)
+			ItemID.AMULET_OF_GLORY_3,                                // Amulet of glory(3)
+			ItemID.AMULET_OF_GLORY_4,                                // Amulet of glory(4)
+			ItemID.AMULET_OF_GLORY_5,                                // Amulet of glory(5)
+			ItemID.AMULET_OF_GLORY_6,                                // Amulet of glory(6)
+			ItemID.AMULET_OF_GLORY_INF                               // Amulet of eternal glory
 		);
 
-		// ==================== GAMES NECKLACE ====================
+		// ==================== CROSSBOWS ====================
 
-		addVariantGroup(
-			3853,   // Games necklace (8)
-			3855,   // Games necklace (7)
-			3857,   // Games necklace (6)
-			3859,   // Games necklace (5)
-			3861,   // Games necklace (4)
-			3863,   // Games necklace (3)
-			3865,   // Games necklace (2)
-			3867    // Games necklace (1)
+		group("Rune crossbow", "CROSSBOW_RUNITE|CROSSBOW_UNSTRUNG_RUNITE|RUNE_XBOW",
+			ItemID.XBOWS_CROSSBOW_RUNITE,                            // Rune crossbow
+			ItemID.XBOWS_CROSSBOW_UNSTRUNG_RUNITE,                   // Runite crossbow (u)
+			ItemID.LEAGUE_3_RUNE_XBOW                                // Rune crossbow (or)
 		);
 
-		// ==================== RING OF DUELING ====================
-
-		addVariantGroup(
-			2552,   // Ring of dueling (8)
-			2554,   // Ring of dueling (7)
-			2556,   // Ring of dueling (6)
-			2558,   // Ring of dueling (5)
-			2560,   // Ring of dueling (4)
-			2562,   // Ring of dueling (3)
-			2564,   // Ring of dueling (2)
-			2566    // Ring of dueling (1)
-		);
-
-		// ==================== COMBAT BRACELET ====================
-
-		addVariantGroup(
-			11118,  // Combat bracelet (6)
-			11120,  // Combat bracelet (5)
-			11122,  // Combat bracelet (4)
-			11124,  // Combat bracelet (3)
-			11126,  // Combat bracelet (2)
-			11128   // Combat bracelet (1)
-		);
-
-		// ==================== SKILLS NECKLACE ====================
-
-		addVariantGroup(
-			11105,  // Skills necklace (6)
-			11107,  // Skills necklace (5)
-			11109,  // Skills necklace (4)
-			11111,  // Skills necklace (3)
-			11113,  // Skills necklace (2)
-			11115   // Skills necklace (1)
-		);
-
-		// ==================== DIGSITE PENDANT ====================
-
-		addVariantGroup(
-			11190,  // Digsite pendant (5)
-			11191,  // Digsite pendant (4)
-			11192,  // Digsite pendant (3)
-			11193,  // Digsite pendant (2)
-			11194   // Digsite pendant (1)
-		);
-
-		// ==================== NECKLACE OF PASSAGE ====================
-
-		addVariantGroup(
-			21146,  // Necklace of passage (5)
-			21149,  // Necklace of passage (4)
-			21151,  // Necklace of passage (3)
-			21153,  // Necklace of passage (2)
-			21155   // Necklace of passage (1)
-		);
-
-		// ==================== BURNING AMULET ====================
-
-		addVariantGroup(
-			21166,  // Burning amulet (5)
-			21169,  // Burning amulet (4)
-			21171,  // Burning amulet (3)
-			21173,  // Burning amulet (2)
-			21175   // Burning amulet (1)
-		);
-
-		// ==================== RING OF RETURNING ====================
-
-		addVariantGroup(
-			21129,  // Ring of returning (5)
-			21132,  // Ring of returning (4)
-			21134,  // Ring of returning (3)
-			21136,  // Ring of returning (2)
-			21138   // Ring of returning (1)
-		);
-
-		// ==================== AMULET OF GLORY (T) ====================
-
-		addVariantGroup(
-			10354,  // Amulet of glory (t) (uncharged)
-			10356,  // Amulet of glory (t1)
-			10358,  // Amulet of glory (t2)
-			10360,  // Amulet of glory (t3)
-			10362,  // Amulet of glory (t4)
-			11964,  // Amulet of glory (t5)
-			11966   // Amulet of glory (t6)
-		);
-
-		// ==================== AMULET OF ETERNAL GLORY ====================
-
-		addVariantGroup(
-			19707,  // Amulet of eternal glory
-			1712    // Also maps from regular glory (4) - shares functionality
-		);
-
-		// ==================== TELEPORT JEWELLERY - MISC ====================
-
-		// Enchanted lyre
-		addVariantGroup(
-			3690,   // Enchanted lyre
-			6125,   // Enchanted lyre (1)
-			6126,   // Enchanted lyre (2)
-			6127,   // Enchanted lyre (3)
-			6128    // Enchanted lyre (4)
-		);
-
-		// Drakan's medallion
-		addVariantGroup(
-			22400,  // Drakan's medallion
-			22401   // Drakan's medallion (charges visible)
-		);
-
-		// Skull sceptre
-		addVariantGroup(
-			9013,   // Skull sceptre
-			21273,  // Skull sceptre (i)
-			9012,   // Skull sceptre (i) variant
-			21276   // Strange skull
-		);
-
-		// ==================== BLIGHTED SUPPLIES ====================
-
-		// Blighted super restores
-		addVariantGroup(
-			24620,  // Blighted super restore (4)
-			24623,  // Blighted super restore (3)
-			24626,  // Blighted super restore (2)
-			24629   // Blighted super restore (1)
-		);
-
-		// Blighted anglerfish
-		addVariantGroup(
-			24640,  // Blighted anglerfish
-			13441   // Regular anglerfish
-		);
-
-		// Blighted karambwan
-		addVariantGroup(
-			24650,  // Blighted karambwan
-			3144    // Regular karambwan
-		);
-
-		// Blighted manta ray
-		addVariantGroup(
-			24643,  // Blighted manta ray
-			391     // Regular manta ray
-		);
-
-		// Pharaoh's sceptre (consolidated into earlier section)
-
-		// ==================== ZAMORAKIAN HASTA/SPEAR ====================
-
-		addVariantGroup(
-			11824,  // Zamorakian spear
-			11889   // Zamorakian hasta
-		);
-
-		// ==================== ANCIENT STAFF VARIANTS ====================
-
-		addVariantGroup(
-			4675,   // Ancient staff
-			22323   // Ancient sceptre
-		);
-
-		// ==================== SEERCULL ====================
-
-		addVariantGroup(
-			6724,   // Seercull
-			28783   // Seercull (or)
-		);
-
-		// ==================== MASTER WAND ====================
-
-		addVariantGroup(
-			6914,   // Master wand
-			28781   // Master wand (or)
-		);
-
-		// ==================== MAGE'S BOOK ====================
-
-		addVariantGroup(
-			6889,   // Mage's book
-			28779   // Mage's book (or)
-		);
-
-		// ==================== RUNE CANE ====================
-
-		addVariantGroup(
-			12373,  // Rune cane
-			28777   // Rune cane (or)
-		);
-
-		// ==================== DRAGON CANE ====================
-
-		addVariantGroup(
-			12369,  // Dragon cane
-			28775   // Dragon cane (or)
-		);
-
-		// ==================== TARNISHED LOCKET ====================
-
-		addVariantGroup(
-			29959,  // Tarnished locket (charged)
-			29961   // Tarnished locket (uncharged)
-		);
-
-		// Pharaoh's sceptre (or) (consolidated into earlier section)
-
-		// ==================== BRYOPHYTA'S STAFF ====================
-
-		addVariantGroup(
-			22370,  // Bryophyta's staff (charged)
-			22368   // Bryophyta's staff (uncharged)
-		);
-
-		// ==================== BLUE MOON ITEMS ====================
-
-		addVariantGroup(
-			28260,  // Blue moon helm (charged)
-			28262   // Blue moon helm (uncharged)
-		);
-
-		addVariantGroup(
-			28264,  // Blue moon chestplate (charged)
-			28266   // Blue moon chestplate (uncharged)
-		);
-
-		addVariantGroup(
-			28268,  // Blue moon tassets (charged)
-			28270   // Blue moon tassets (uncharged)
-		);
-
-		addVariantGroup(
-			28272,  // Blue moon spear (charged)
-			28274   // Blue moon spear (uncharged)
-		);
-
-		// ==================== BLOOD MOON ITEMS ====================
-
-		addVariantGroup(
-			28276,  // Blood moon helm (charged)
-			28278   // Blood moon helm (uncharged)
-		);
-
-		addVariantGroup(
-			28280,  // Blood moon chestplate (charged)
-			28282   // Blood moon chestplate (uncharged)
-		);
-
-		addVariantGroup(
-			28284,  // Blood moon tassets (charged)
-			28286   // Blood moon tassets (uncharged)
-		);
-
-		addVariantGroup(
-			28288,  // Dual macuahuitl (charged)
-			28290   // Dual macuahuitl (uncharged)
-		);
-
-		// ==================== ECLIPSE MOON ITEMS ====================
-
-		addVariantGroup(
-			28292,  // Eclipse moon helm (charged)
-			28294   // Eclipse moon helm (uncharged)
-		);
-
-		addVariantGroup(
-			28296,  // Eclipse moon chestplate (charged)
-			28298   // Eclipse moon chestplate (uncharged)
-		);
-
-		addVariantGroup(
-			28300,  // Eclipse moon tassets (charged)
-			28302   // Eclipse moon tassets (uncharged)
-		);
-
-		addVariantGroup(
-			28304,  // Eclipse atlatl (charged)
-			28306   // Eclipse atlatl (uncharged)
-		);
-
-		// ==================== TONALZTICS OF RALOS ====================
-
-		addVariantGroup(
-			28316,  // Tonalztics of ralos (charged)
-			28318   // Tonalztics of ralos (uncharged)
-		);
-
-		// ==================== SUNFIRE FANATIC ====================
-
-		addVariantGroup(
-			28308,  // Sunfire fanatic helm
-			28310,  // Sunfire fanatic cuirass
-			28312   // Sunfire fanatic chausses
-		);
-
-		// ==================== KERIS PARTISAN ====================
-
-		addVariantGroup(
-			25977,  // Keris partisan
-			25981,  // Keris partisan of breaching
-			25979,  // Keris partisan of corruption
-			25983   // Keris partisan of the sun
-		);
-
-		// ==================== LIGHTBEARER ====================
-
-		addVariantGroup(
-			25975,  // Lightbearer
-			27253   // Lightbearer (or)
-		);
-
-		// ==================== BOOK OF THE DEAD ====================
-
-		addVariantGroup(
-			25818,  // Book of the dead (empty)
-			25820   // Book of the dead (charged)
-		);
-
-		// ==================== SHADOW ANCIENT SCEPTRE ====================
-
-		addVariantGroup(
-			27660,  // Ancient sceptre (shadow)
-			27258   // Ancient sceptre (or)
-		);
-
-		// ==================== ANCIENT GODSWORD ====================
-
-		addVariantGroup(
-			26233,  // Ancient godsword
-			27327   // Ancient godsword (or)
-		);
-
-		// ==================== ZARYTE CROSSBOW ====================
-
-		addVariantGroup(
-			26374,  // Zaryte crossbow
-			27329   // Zaryte crossbow (or)
-		);
-
-		// ==================== ARMADYL CROSSBOW ====================
-
-		addVariantGroup(
-			11785,  // Armadyl crossbow
-			23611   // Armadyl crossbow (or)
-		);
-
-		// ==================== BOW OF FAERDHINEN (C) ====================
-
-		addVariantGroup(
-			25867,  // Bow of faerdhinen (c)
-			25884,  // Bow of faerdhinen (c) (red)
-			25886,  // Bow of faerdhinen (c) (white)
-			25888,  // Bow of faerdhinen (c) (green)
-			25890,  // Bow of faerdhinen (c) (blue)
-			25892   // Bow of faerdhinen (c) (yellow)
-		);
-
-		// ==================== BLADE OF SAELDOR (C) ====================
-
-		addVariantGroup(
-			25870,  // Blade of saeldor (c)
-			25872,  // Blade of saeldor (c) (red)
-			25874,  // Blade of saeldor (c) (white)
-			25876,  // Blade of saeldor (c) (green)
-			25878,  // Blade of saeldor (c) (blue)
-			25880   // Blade of saeldor (c) (yellow)
-		);
-
-		// ==================== TWISTED BOW ====================
-
-		addVariantGroup(
-			20997,  // Twisted bow
-			24670,  // Twisted bow (or)
-			29939   // Echo twisted bow
-		);
-
-		// ==================== KODAI WAND ====================
-
-		addVariantGroup(
-			21006,  // Kodai wand
-			29941   // Echo kodai wand
-		);
-
-		// ==================== INQUISITOR'S ARMOUR ====================
-
-		addVariantGroup(
-			24419,  // Inquisitor's great helm
-			30021   // Inquisitor's great helm (or)
-		);
-
-		addVariantGroup(
-			24420,  // Inquisitor's hauberk
-			30023   // Inquisitor's hauberk (or)
-		);
-
-		addVariantGroup(
-			24421,  // Inquisitor's plateskirt
-			30025   // Inquisitor's plateskirt (or)
-		);
-
-		addVariantGroup(
-			24417,  // Inquisitor's mace
-			30027   // Inquisitor's mace (or)
-		);
-
-		// ==================== NIGHTMARE STAFF ====================
-
-		addVariantGroup(
-			24422,  // Nightmare staff
-			24424,  // Harmonised nightmare staff
-			24425,  // Volatile nightmare staff
-			24423   // Eldritch nightmare staff
-		);
-
-		// ==================== BANDOS ====================
-
-		addVariantGroup(
-			11832,  // Bandos chestplate
-			30007   // Bandos chestplate (or)
-		);
-
-		addVariantGroup(
-			11834,  // Bandos tassets
-			30009   // Bandos tassets (or)
-		);
-
-		addVariantGroup(
-			11836,  // Bandos boots
-			30011   // Bandos boots (or)
-		);
-
-		// ==================== ARMADYL ====================
-
-		addVariantGroup(
-			11826,  // Armadyl helmet
-			30001   // Armadyl helmet (or)
-		);
-
-		addVariantGroup(
-			11828,  // Armadyl chestplate
-			30003   // Armadyl chestplate (or)
-		);
-
-		addVariantGroup(
-			11830,  // Armadyl chainskirt
-			30005   // Armadyl chainskirt (or)
-		);
-
-		// ==================== SPIRIT SHIELDS ====================
-
-		addVariantGroup(
-			12817,  // Spectral spirit shield
-			30013   // Spectral spirit shield (or)
-		);
-
-		addVariantGroup(
-			12821,  // Arcane spirit shield
-			30015   // Arcane spirit shield (or)
-		);
-
-		addVariantGroup(
-			12825,  // Elysian spirit shield
-			30017   // Elysian spirit shield (or)
-		);
-
-		// ==================== DINHS BLAZING VARIANTS ====================
-
-		addVariantGroup(
-			21015,  // Dinh's bulwark
-			28690,  // Dinh's blazing bulwark
-			30019   // Dinh's blazing bulwark (or)
-		);
-
-		// ==================== VIRTUS ROBES ====================
-
-		addVariantGroup(
-			26241,  // Virtus mask
-			30029,  // Virtus mask (or)
-			29814   // Echo Virtus mask
-		);
-
-		addVariantGroup(
-			26243,  // Virtus robe top
-			30031,  // Virtus robe top (or)
-			29815   // Echo Virtus robe top
-		);
-
-		addVariantGroup(
-			26245,  // Virtus robe legs
-			30041,  // Virtus robe legs (or)
-			29816   // Echo Virtus robe bottom
-		);
-
-		// ==================== DRAGON HUNTER LANCE ====================
-
-		addVariantGroup(
-			22978,  // Dragon hunter lance
-			30039   // Dragon hunter lance (or)
-		);
-
-		// Pharaoh's sceptre (uncharged to charged) (consolidated into earlier section)
-
-		// ==================== DRAGONFIRE SHIELDS ====================
-
-		addVariantGroup(
-			11283,  // Dragonfire shield
-			11284   // Dragonfire shield (charged)
-		);
-
-		addVariantGroup(
-			22002,  // Dragonfire ward
-			22003   // Dragonfire ward (charged)
-		);
-
-		addVariantGroup(
-			21633,  // Ancient wyvern shield
-			21634   // Ancient wyvern shield (charged)
-		);
-
-		// ==================== TOME OF FIRE ====================
-
-		addVariantGroup(
-			20714,  // Tome of fire (empty)
-			20716   // Tome of fire (charged)
-		);
-
-		// ==================== TOME OF WATER ====================
-
-		addVariantGroup(
-			25574,  // Tome of water (empty)
-			25576   // Tome of water (charged)
-		);
-
-		// ==================== BONECRUSHER ====================
-
-		addVariantGroup(
-			13116,  // Bonecrusher
-			24480,  // Bonecrusher necklace
-			24482   // Bonecrusher necklace (charged)
-		);
-
-		// ==================== ASH SANCTIFIER ====================
-
-		addVariantGroup(
-			25566,  // Ash sanctifier
-			25568   // Ash sanctifier (charged)
-		);
-
-		// ==================== SOUL BEARER ====================
-
-		addVariantGroup(
-			22333,  // Soul bearer
-			22336   // Soul bearer (charged)
-		);
-
-		// ==================== COAL BAG ====================
-
-		addVariantGroup(
-			12019,  // Coal bag
-			24480   // Coal bag (open)
-		);
-
-		// ==================== GEM BAG ====================
-
-		addVariantGroup(
-			12020,  // Gem bag
-			24481   // Gem bag (open)
-		);
-
-		// ==================== HERB SACK ====================
-
-		addVariantGroup(
-			13226,  // Herb sack
-			24478   // Herb sack (open)
-		);
-
-		// ==================== SEED BOX ====================
-
-		addVariantGroup(
-			13639,  // Seed box
-			24479   // Seed box (open)
-		);
-
-		// ==================== LOG BASKET ====================
-
-		addVariantGroup(
-			28779,  // Log basket
-			28780   // Log basket (open)
-		);
-
-		// ==================== FISH BARREL ====================
-
-		addVariantGroup(
-			25582,  // Fish barrel
-			25584   // Fish barrel (open)
-		);
-
-		// ==================== FORESTRY EQUIPMENT ====================
-
-		addVariantGroup(
-			28189,  // Forestry hat
-			28194   // Forestry hat (or)
-		);
-
-		addVariantGroup(
-			28191,  // Forestry top
-			28196   // Forestry top (or)
-		);
-
-		addVariantGroup(
-			28193,  // Forestry legs
-			28198   // Forestry legs (or)
-		);
-
-		addVariantGroup(
-			28183,  // Forestry boots
-			28200   // Forestry boots (or)
-		);
-
-		// ==================== IRON/STEEL/MITH/ADDY/RUNE CROSSBOW (U) ====================
-
-		addVariantGroup(
-			9174,   // Bronze crossbow (u)
-			9176,   // Bronze crossbow
-			9177    // Bronze crossbow (string)
-		);
-
-		addVariantGroup(
-			9177,   // Iron crossbow (u)
-			9179,   // Iron crossbow
-			9180    // Iron crossbow (string)
-		);
-
-		addVariantGroup(
-			9181,   // Steel crossbow (u)
-			9183,   // Steel crossbow
-			9184    // Steel crossbow (string)
-		);
-
-		addVariantGroup(
-			9185,   // Mithril crossbow (u)
-			9187,   // Mithril crossbow
-			9188    // Mithril crossbow (string)
-		);
-
-		addVariantGroup(
-			9189,   // Adamant crossbow (u)
-			9191,   // Adamant crossbow
-			9192    // Adamant crossbow (string)
-		);
-
-		addVariantGroup(
-			9193,   // Rune crossbow (u)
-			9185    // Rune crossbow
-		);
-
-		// ==================== TOXIC TRIDENT UPGRADES ====================
-
-		addVariantGroup(
-			22288,  // Trident of the seas (e)
-			22290,  // Trident of the seas (e) partial
-			22292   // Trident of the swamp (e)
-		);
-
-		// ==================== KRAKEN TENTACLE WHIP ====================
-
-		addVariantGroup(
-			12004,  // Kraken tentacle
-			12006   // Abyssal tentacle
-		);
-
-		// ==================== BLESSED SARA SWORD ====================
-
-		addVariantGroup(
-			12804,  // Saradomin's blessed sword
-			12809   // Saradomin's blessed sword (charged)
-		);
-
-		// ==================== CLUE SCROLL ORNAMENT KITS ====================
-
-		// Dark bow ornament kits
-		addVariantGroup(
-			20408,  // Dark bow (ornament kit)
-			12765,  // Dark bow (green)
-			12766,  // Dark bow (blue)
-			12767,  // Dark bow (yellow)
-			12768   // Dark bow (white)
-		);
-
-		// ==================== TENTACLE POOL ITEMS ====================
-
-		addVariantGroup(
-			12771,  // Frozen abyssal whip
-			12773,  // Volcanic abyssal whip
-			4151    // Abyssal whip
-		);
-
-		// ==================== MISCELLANIA/ETCETERIA ====================
-
-		addVariantGroup(
-			7936,   // Ring of charos
-			6465    // Ring of charos (a)
-		);
-
-		// ==================== LUNAR EQUIPMENT ====================
-
-		addVariantGroup(
-			9084,   // Lunar helm
-			9085,   // Lunar torso
-			9086,   // Lunar legs
-			9087,   // Lunar gloves
-			9088    // Lunar boots
-		);
-
-		// ==================== IMBUED RINGS (Emir's Arena) ====================
-
-		addVariantGroup(
-			26684,  // Berserker ring (i) (Emir's Arena)
-			26685,  // Archers ring (i) (Emir's Arena)
-			26686,  // Seers ring (i) (Emir's Arena)
-			26687,  // Warrior ring (i) (Emir's Arena)
-			26688,  // Tyrannical ring (i) (Emir's Arena)
-			26689,  // Treasonous ring (i) (Emir's Arena)
-			26690   // Ring of the gods (i) (Emir's Arena)
-		);
-
-		// ==================== GILDED PICKAXE/AXE ====================
-
-		addVariantGroup(
-			23276,  // Gilded pickaxe
-			11920,  // Dragon pickaxe
-			12797   // Dragon pickaxe (or)
-		);
-
-		addVariantGroup(
-			23279,  // Gilded axe
-			6739,   // Dragon axe
-			12807   // Dragon axe (or)
-		);
-
-		// ==================== ENCHANTED SLAYER HELM ====================
-
-		addVariantGroup(
-			11864,  // Slayer helmet
-			11865,  // Slayer helmet (i)
-			25177   // Slayer helmet (i) (Soul Wars)
-		);
-
-		// ==================== PET MORPHS (Olmlet) ====================
-
-		addVariantGroup(
-			20851,  // Olmlet
-			24486,  // Olmlet (small)
-			24488,  // Olmlet (younger)
-			24490   // Olmlet (cm)
-		);
-
-		// ==================== PET MORPHS (Snakeling) ====================
-
-		addVariantGroup(
-			12921,  // Snakeling
-			12939,  // Snakeling (green)
-			12940,  // Snakeling (red)
-			13178   // Snakeling (tanzanite)
-		);
-
-		// ==================== LEAGUES - RELIC HUNTER OUTFITS ====================
-
-		// Twisted Relic Hunter (T1, T2, T3) - Hood
-		addVariantGroup(
-			24413,  // Twisted relic hunter (t1) hood
-			24416,  // Twisted relic hunter (t2) hood
-			24419   // Twisted relic hunter (t3) hood
-		);
-
-		// Twisted Relic Hunter - Top
-		addVariantGroup(
-			24414,  // Twisted relic hunter (t1) top
-			24417,  // Twisted relic hunter (t2) top
-			24420   // Twisted relic hunter (t3) top
-		);
-
-		// Twisted Relic Hunter - Trousers
-		addVariantGroup(
-			24415,  // Twisted relic hunter (t1) trousers
-			24418,  // Twisted relic hunter (t2) trousers
-			24421   // Twisted relic hunter (t3) trousers
-		);
-
-		// Trailblazer Relic Hunter (T1, T2, T3) - Hood
-		addVariantGroup(
-			25044,  // Trailblazer relic hunter (t1) hood
-			25047,  // Trailblazer relic hunter (t2) hood
-			25050   // Trailblazer relic hunter (t3) hood
-		);
-
-		// Trailblazer Relic Hunter - Top
-		addVariantGroup(
-			25045,  // Trailblazer relic hunter (t1) top
-			25048,  // Trailblazer relic hunter (t2) top
-			25051   // Trailblazer relic hunter (t3) top
-		);
-
-		// Trailblazer Relic Hunter - Trousers
-		addVariantGroup(
-			25046,  // Trailblazer relic hunter (t1) trousers
-			25049,  // Trailblazer relic hunter (t2) trousers
-			25052   // Trailblazer relic hunter (t3) trousers
-		);
-
-		// Shattered Relic Hunter (T1, T2, T3) - Hood
-		addVariantGroup(
-			26851,  // Shattered relic hunter (t1) hood
-			26854,  // Shattered relic hunter (t2) hood
-			26857   // Shattered relic hunter (t3) hood
-		);
-
-		// Shattered Relic Hunter - Top
-		addVariantGroup(
-			26852,  // Shattered relic hunter (t1) top
-			26855,  // Shattered relic hunter (t2) top
-			26858   // Shattered relic hunter (t3) top
-		);
-
-		// Shattered Relic Hunter - Trousers
-		addVariantGroup(
-			26853,  // Shattered relic hunter (t1) trousers
-			26856,  // Shattered relic hunter (t2) trousers
-			26859   // Shattered relic hunter (t3) trousers
-		);
-
-		// Trailblazer Reloaded Relic Hunter (T1, T2, T3) - Hood
-		addVariantGroup(
-			28615,  // Trailblazer reloaded relic hunter (t1) hood
-			28618,  // Trailblazer reloaded relic hunter (t2) hood
-			28621   // Trailblazer reloaded relic hunter (t3) hood
-		);
-
-		// Trailblazer Reloaded Relic Hunter - Top
-		addVariantGroup(
-			28616,  // Trailblazer reloaded relic hunter (t1) top
-			28619,  // Trailblazer reloaded relic hunter (t2) top
-			28622   // Trailblazer reloaded relic hunter (t3) top
-		);
-
-		// Trailblazer Reloaded Relic Hunter - Trousers
-		addVariantGroup(
-			28617,  // Trailblazer reloaded relic hunter (t1) trousers
-			28620,  // Trailblazer reloaded relic hunter (t2) trousers
-			28623   // Trailblazer reloaded relic hunter (t3) trousers
-		);
-
-		// Raging Echoes Relic Hunter (T1, T2, T3) - Hood
-		addVariantGroup(
-			29800,  // Raging echoes relic hunter (t1) hood
-			29803,  // Raging echoes relic hunter (t2) hood
-			29806   // Raging echoes relic hunter (t3) hood
-		);
-
-		// Raging Echoes Relic Hunter - Top
-		addVariantGroup(
-			29801,  // Raging echoes relic hunter (t1) top
-			29804,  // Raging echoes relic hunter (t2) top
-			29807   // Raging echoes relic hunter (t3) top
-		);
-
-		// Raging Echoes Relic Hunter - Trousers
-		addVariantGroup(
-			29802,  // Raging echoes relic hunter (t1) trousers
-			29805,  // Raging echoes relic hunter (t2) trousers
-			29808   // Raging echoes relic hunter (t3) trousers
-		);
-
-		// ==================== LEAGUES - CANES AND BANNERS ====================
-
-		// Leagues Canes
-		addVariantGroup(
-			24422,  // Twisted cane
-			25053,  // Trailblazer cane
-			26860,  // Shattered cane
-			28624,  // Trailblazer reloaded torch
-			29809   // Raging echoes cane
-		);
-
-		// Leagues Banners
-		addVariantGroup(
-			24410,  // Twisted banner
-			25041,  // Trailblazer banner
-			26848,  // Shattered banner
-			28612,  // Trailblazer reloaded banner
-			29797   // Raging echoes banner
-		);
-
-		// ==================== LEAGUES - TOOL ORNAMENT KITS ====================
-
-		// Trailblazer tool (or) - Dragon pickaxe
-		addVariantGroup(
-			25063,  // Trailblazer dragon pickaxe (or)
-			25064,  // Trailblazer infernal pickaxe (or)
-			11920,  // Dragon pickaxe
-			12797   // Dragon pickaxe (or)
-		);
-
-		// Trailblazer tool (or) - Dragon axe
-		addVariantGroup(
-			25059,  // Trailblazer dragon axe (or)
-			25060,  // Trailblazer infernal axe (or)
-			6739,   // Dragon axe
-			12807   // Dragon axe (or)
-		);
-
-		// Trailblazer tool (or) - Dragon harpoon
-		addVariantGroup(
-			25061,  // Trailblazer dragon harpoon (or)
-			25062,  // Trailblazer infernal harpoon (or)
-			21028,  // Dragon harpoon
-			21031   // Dragon harpoon (or)
-		);
-
-		// ==================== LEAGUES - SHATTERED RELICS VARIETY ORNAMENT ====================
-
-		// Shattered abyssal whip (or)
-		addVariantGroup(
-			26865,  // Shattered abyssal whip (or)
-			4151,   // Abyssal whip
-			12773,  // Volcanic abyssal whip
-			12774   // Frozen abyssal whip
-		);
-
-		// Shattered abyssal tentacle (or)
-		addVariantGroup(
-			26866,  // Shattered abyssal tentacle (or)
-			12006   // Abyssal tentacle
-		);
-
-		// Shattered rune crossbow (or)
-		addVariantGroup(
-			26867,  // Shattered rune crossbow (or)
-			9185,   // Rune crossbow
-			23601   // Rune crossbow (or)
-		);
-
-		// ==================== LEAGUES - SHATTERED VOID ORNAMENT KIT ====================
-
-		// Shattered void melee helm
-		addVariantGroup(
-			26876,  // Shattered void melee helm
-			11663   // Void melee helm
-		);
-
-		// Shattered void ranger helm
-		addVariantGroup(
-			26877,  // Shattered void ranger helm
-			11664   // Void ranger helm
-		);
-
-		// Shattered void mage helm
-		addVariantGroup(
-			26878,  // Shattered void mage helm
-			8842    // Void mage helm
-		);
-
-		// Shattered void knight top
-		addVariantGroup(
-			26879,  // Shattered void knight top
-			8839,   // Void knight top
-			13072   // Elite void top
-		);
-
-		// Shattered void knight robe
-		addVariantGroup(
-			26880,  // Shattered void knight robe
-			8840,   // Void knight robe
-			13073   // Elite void robe
-		);
-
-		// Shattered void knight gloves
-		addVariantGroup(
-			26881,  // Shattered void knight gloves
-			8842    // Void knight gloves
-		);
-
-		// ==================== LEAGUES - RAGING ECHOES ORNAMENT KITS ====================
-
-		// Echo Ahrim's robes
-		addVariantGroup(
-			29810,  // Echo Ahrim's hood
-			4708    // Ahrim's hood 0
-		);
-
-		addVariantGroup(
-			29811,  // Echo Ahrim's robetop
-			4712    // Ahrim's robetop 0
-		);
-
-		addVariantGroup(
-			29812,  // Echo Ahrim's robeskirt
-			4714    // Ahrim's robeskirt 0
-		);
-
-		addVariantGroup(
-			29813,  // Echo Ahrim's staff
-			4710    // Ahrim's staff 0
-		);
-
-		// Echo Virtus robes (consolidated into VIRTUS ROBES section above)
-
-		// ==================== CASTLE WARS DECORATIVE ARMOUR ====================
-
-		// Decorative helms (Red, White, Gold)
-		addVariantGroup(
-			4071,   // Decorative helm (red)
-			4506,   // Decorative helm (white)
-			4511    // Decorative helm (gold)
-		);
-
-		// Decorative full helms (Red, White, Gold)
-		addVariantGroup(
-			11898,  // Decorative full helm (red)
-			11899,  // Decorative full helm (white)
-			11900   // Decorative full helm (gold)
-		);
-
-		// Decorative bodies (Red, White, Gold)
-		addVariantGroup(
-			4069,   // Decorative body (red)
-			4504,   // Decorative body (white)
-			4509    // Decorative body (gold)
-		);
-
-		// Decorative legs (Red, White, Gold)
-		addVariantGroup(
-			4070,   // Decorative legs (red)
-			4505,   // Decorative legs (white)
-			4510    // Decorative legs (gold)
-		);
-
-		// Decorative skirts (Red, White, Gold)
-		addVariantGroup(
-			11896,  // Decorative skirt (red)
-			11897,  // Decorative skirt (white)
-			11895   // Decorative skirt (gold)
-		);
-
-		// Decorative shields (Red, White, Gold)
-		addVariantGroup(
-			4072,   // Decorative shield (red)
-			4507,   // Decorative shield (white)
-			4512    // Decorative shield (gold)
-		);
-
-		// Decorative swords (Red, White, Gold)
-		addVariantGroup(
-			4068,   // Decorative sword (red)
-			4503,   // Decorative sword (white)
-			4508    // Decorative sword (gold)
-		);
-
-		// Decorative boots (Red, White, Gold)
-		addVariantGroup(
-			11901,  // Decorative boots (red)
-			11902,  // Decorative boots (white)
-			11903   // Decorative boots (gold)
-		);
-
-		// Castle Wars magic armour
-		addVariantGroup(
-			4513,   // Decorative magic hat (red)
-			4514,   // Decorative magic hat (white)
-			4515    // Decorative magic hat (gold)
-		);
-
-		addVariantGroup(
-			4516,   // Decorative magic top (red)
-			4517,   // Decorative magic top (white)
-			4518    // Decorative magic top (gold)
-		);
-
-		addVariantGroup(
-			4519,   // Decorative magic robe (red)
-			4520,   // Decorative magic robe (white)
-			4521    // Decorative magic robe (gold)
-		);
-
-		// Castle Wars ranged armour
-		addVariantGroup(
-			4522,   // Decorative ranged top (red)
-			4523,   // Decorative ranged top (white)
-			4524    // Decorative ranged top (gold)
-		);
-
-		addVariantGroup(
-			4525,   // Decorative ranged legs (red)
-			4526,   // Decorative ranged legs (white)
-			4527    // Decorative ranged legs (gold)
-		);
-
-		addVariantGroup(
-			4528,   // Decorative quiver (red)
-			4529,   // Decorative quiver (white)
-			4530    // Decorative quiver (gold)
-		);
-
-		// ==================== SHAYZIEN ARMOUR (5 TIERS) ====================
-
-		// Shayzien helm (tiers 1-5)
-		addVariantGroup(
-			13357,  // Shayzien helm (1)
-			13361,  // Shayzien helm (2)
-			13365,  // Shayzien helm (3)
-			13369,  // Shayzien helm (4)
-			13373   // Shayzien helm (5)
-		);
-
-		// Shayzien body (tiers 1-5)
-		addVariantGroup(
-			13358,  // Shayzien platebody (1)
-			13362,  // Shayzien platebody (2)
-			13366,  // Shayzien platebody (3)
-			13370,  // Shayzien platebody (4)
-			13374   // Shayzien body (5)
-		);
-
-		// Shayzien greaves (tiers 1-5)
-		addVariantGroup(
-			13359,  // Shayzien greaves (1)
-			13363,  // Shayzien greaves (2)
-			13367,  // Shayzien greaves (3)
-			13371,  // Shayzien greaves (4)
-			13375   // Shayzien greaves (5)
-		);
-
-		// Shayzien gloves (tiers 1-5)
-		addVariantGroup(
-			13360,  // Shayzien gloves (1)
-			13364,  // Shayzien gloves (2)
-			13368,  // Shayzien gloves (3)
-			13372,  // Shayzien gloves (4)
-			13376   // Shayzien gloves (5)
+		group("Dragon crossbow", "XBOWS_CROSSBOW_DRAGON",
+			ItemID.XBOWS_CROSSBOW_DRAGON,                            // Dragon crossbow
+			ItemID.BH_XBOWS_CROSSBOW_DRAGON_CORRUPTED                // Dragon crossbow (cr)
 		);
 
-		// Shayzien boots (tiers 1-5)
-		addVariantGroup(
-			13356,  // Shayzien boots (1)
-			13355,  // Shayzien boots (2)
-			13354,  // Shayzien boots (3)
-			13353,  // Shayzien boots (4)
-			13377   // Shayzien boots (5)
+		group("Dragon hunter crossbow", "DRAGONHUNTER_XBOW",
+			ItemID.DRAGONHUNTER_XBOW,                                // Dragon hunter crossbow
+			ItemID.DRAGONHUNTER_XBOW_VORKATH,                        // Dragon hunter crossbow (t)
+			ItemID.DRAGONHUNTER_XBOW_KBD                             // Dragon hunter crossbow (b)
 		);
 
 		// ==================== TRIMMED ARMOUR (CLUE SCROLL) ====================
 
-		// Bronze trimmed/gold-trimmed
-		addVariantGroup(
-			12211,  // Bronze full helm (t)
-			12221,  // Bronze full helm (g)
-			1155    // Bronze full helm
+		group("Rune full helm (trimmed, god and gilded)", "FULL_HELM",
+			ItemID.RUNE_FULL_HELM_TRIM,                              // Rune full helm (t)
+			ItemID.RUNE_FULL_HELM_GOLD,                              // Rune full helm (g)
+			ItemID.RUNE_FULL_HELM,                                   // Rune full helm
+			ItemID.RUNE_FULL_HELM_ZAMORAK,                           // Zamorak full helm
+			ItemID.RUNE_FULL_HELM_SARADOMIN,                         // Saradomin full helm
+			ItemID.RUNE_FULL_HELM_GUTHIX,                            // Guthix full helm
+			ItemID.RUNE_FULL_HELM_ANCIENT,                           // Ancient full helm
+			ItemID.RUNE_FULL_HELM_ARMADYL,                           // Armadyl full helm
+			ItemID.RUNE_FULL_HELM_BANDOS,                            // Bandos full helm
+			ItemID.RUNE_FULL_HELM_GOLDPLATE                          // Gilded full helm
 		);
 
-		addVariantGroup(
-			12215,  // Bronze platebody (t)
-			12225,  // Bronze platebody (g)
-			1117    // Bronze platebody
+		group("Rune platebody (trimmed, god and gilded)", "PLATEBODY",
+			ItemID.RUNE_PLATEBODY_TRIM,                              // Rune platebody (t)
+			ItemID.RUNE_PLATEBODY_GOLD,                              // Rune platebody (g)
+			ItemID.RUNE_PLATEBODY,                                   // Rune platebody
+			ItemID.RUNE_PLATEBODY_ZAMORAK,                           // Zamorak platebody
+			ItemID.RUNE_PLATEBODY_SARADOMIN,                         // Saradomin platebody
+			ItemID.RUNE_PLATEBODY_GUTHIX,                            // Guthix platebody
+			ItemID.RUNE_PLATEBODY_ANCIENT,                           // Ancient platebody
+			ItemID.RUNE_PLATEBODY_ARMADYL,                           // Armadyl platebody
+			ItemID.RUNE_PLATEBODY_BANDOS,                            // Bandos platebody
+			ItemID.RUNE_PLATEBODY_GOLDPLATE                          // Gilded platebody
 		);
 
-		addVariantGroup(
-			12217,  // Bronze platelegs (t)
-			12227,  // Bronze platelegs (g)
-			1075    // Bronze platelegs
+		group("Rune platelegs (trimmed, god and gilded)", "PLATELEGS",
+			ItemID.RUNE_PLATELEGS_TRIM,                              // Rune platelegs (t)
+			ItemID.RUNE_PLATELEGS_GOLD,                              // Rune platelegs (g)
+			ItemID.RUNE_PLATELEGS,                                   // Rune platelegs
+			ItemID.RUNE_PLATELEGS_ZAMORAK,                           // Zamorak platelegs
+			ItemID.RUNE_PLATELEGS_SARADOMIN,                         // Saradomin platelegs
+			ItemID.RUNE_PLATELEGS_GUTHIX,                            // Guthix platelegs
+			ItemID.RUNE_PLATELEGS_ARMADYL,                           // Armadyl platelegs
+			ItemID.RUNE_PLATELEGS_BANDOS,                            // Bandos platelegs
+			ItemID.RUNE_PLATELEGS_GOLDPLATE                          // Gilded platelegs
 		);
 
-		addVariantGroup(
-			12219,  // Bronze plateskirt (t)
-			12229,  // Bronze plateskirt (g)
-			1087    // Bronze plateskirt
+		group("Rune plateskirt (trimmed, god and gilded)", "PLATESKIRT",
+			ItemID.RUNE_PLATESKIRT_TRIM,                             // Rune plateskirt (t)
+			ItemID.RUNE_PLATESKIRT_GOLD,                             // Rune plateskirt (g)
+			ItemID.RUNE_PLATESKIRT,                                  // Rune plateskirt
+			ItemID.RUNE_PLATESKIRT_SARADOMIN,                        // Saradomin plateskirt
+			ItemID.RUNE_PLATESKIRT_ZAMORAK,                          // Zamorak plateskirt
+			ItemID.RUNE_PLATESKIRT_GUTHIX,                           // Guthix plateskirt
+			ItemID.RUNE_PLATESKIRT_ANCIENT,                          // Ancient plateskirt
+			ItemID.RUNE_PLATESKIRT_ARMADYL,                          // Armadyl plateskirt
+			ItemID.RUNE_PLATESKIRT_BANDOS,                           // Bandos plateskirt
+			ItemID.RUNE_PLATESKIRT_GOLDPLATE                         // Gilded plateskirt
 		);
 
-		addVariantGroup(
-			12213,  // Bronze kiteshield (t)
-			12223,  // Bronze kiteshield (g)
-			1189    // Bronze kiteshield
+		group("Rune kiteshield (trimmed, god and gilded)", "KITESHIELD",
+			ItemID.RUNE_KITESHIELD_TRIM,                             // Rune kiteshield (t)
+			ItemID.RUNE_KITESHIELD_GOLD,                             // Rune kiteshield (g)
+			ItemID.RUNE_KITESHIELD,                                  // Rune kiteshield
+			ItemID.RUNE_KITESHIELD_SARADOMIN,                        // Saradomin kiteshield
+			ItemID.RUNE_KITESHIELD_ZAMORAK,                          // Zamorak kiteshield
+			ItemID.RUNE_KITESHIELD_GUTHIX,                           // Guthix kiteshield
+			ItemID.RUNE_KITESHIELD_ANCIENT,                          // Ancient kiteshield
+			ItemID.RUNE_KITESHIELD_ARMADYL,                          // Armadyl kiteshield
+			ItemID.RUNE_KITESHIELD_BANDOS,                           // Bandos kiteshield
+			ItemID.RUNE_KITESHIELD_GOLDPLATE                         // Gilded kiteshield
 		);
 
-		// Iron trimmed/gold-trimmed
-		addVariantGroup(
-			12231,  // Iron full helm (t)
-			12241,  // Iron full helm (g)
-			1153    // Iron full helm
+		group("Bronze trimmed/gold-trimmed", "BRONZE_FULL_HELM",
+			ItemID.BRONZE_FULL_HELM_GOLD,                            // Bronze full helm (g)
+			ItemID.BRONZE_FULL_HELM_TRIM,                            // Bronze full helm (t)
+			ItemID.BRONZE_FULL_HELM                                  // Bronze full helm
 		);
 
-		addVariantGroup(
-			12235,  // Iron platebody (t)
-			12245,  // Iron platebody (g)
-			1115    // Iron platebody
+		group("Bronze platebody", "BRONZE_PLATEBODY",
+			ItemID.BRONZE_PLATEBODY_TRIM,                            // Bronze platebody (t)
+			ItemID.BRONZE_PLATEBODY_GOLD,                            // Bronze platebody (g)
+			ItemID.BRONZE_PLATEBODY                                  // Bronze platebody
 		);
 
-		addVariantGroup(
-			12237,  // Iron platelegs (t)
-			12247,  // Iron platelegs (g)
-			1067    // Iron platelegs
+		group("Bronze platelegs", "BRONZE_PLATELEGS",
+			ItemID.BRONZE_PLATELEGS_TRIM,                            // Bronze platelegs (t)
+			ItemID.BRONZE_PLATELEGS_GOLD,                            // Bronze platelegs (g)
+			ItemID.BRONZE_PLATELEGS                                  // Bronze platelegs
 		);
 
-		addVariantGroup(
-			12239,  // Iron plateskirt (t)
-			12249,  // Iron plateskirt (g)
-			1081    // Iron plateskirt
+		group("Bronze plateskirt", "BRONZE_PLATESKIRT",
+			ItemID.BRONZE_PLATESKIRT_TRIM,                           // Bronze plateskirt (t)
+			ItemID.BRONZE_PLATESKIRT_GOLD,                           // Bronze plateskirt (g)
+			ItemID.BRONZE_PLATESKIRT                                 // Bronze plateskirt
 		);
 
-		addVariantGroup(
-			12233,  // Iron kiteshield (t)
-			12243,  // Iron kiteshield (g)
-			1191    // Iron kiteshield
+		group("Bronze kiteshield", "BRONZE_KITESHIELD",
+			ItemID.BRONZE_KITESHIELD_GOLD,                           // Bronze kiteshield (g)
+			ItemID.BRONZE_KITESHIELD_TRIM,                           // Bronze kiteshield (t)
+			ItemID.BRONZE_KITESHIELD                                 // Bronze kiteshield
 		);
 
-		// Steel trimmed/gold-trimmed
-		addVariantGroup(
-			20169,  // Steel full helm (t)
-			20172,  // Steel full helm (g)
-			1157    // Steel full helm
+		group("Iron trimmed/gold-trimmed", "IRON_FULL_HELM",
+			ItemID.IRON_FULL_HELM_TRIM,                              // Iron full helm (t)
+			ItemID.IRON_FULL_HELM_GOLD,                              // Iron full helm (g)
+			ItemID.IRON_FULL_HELM                                    // Iron full helm
 		);
 
-		addVariantGroup(
-			20178,  // Steel platebody (t)
-			20181,  // Steel platebody (g)
-			1119    // Steel platebody
+		group("Iron platebody", "IRON_PLATEBODY",
+			ItemID.IRON_PLATEBODY_GOLD,                              // Iron platebody (g)
+			ItemID.IRON_PLATEBODY                                    // Iron platebody
 		);
 
-		addVariantGroup(
-			20184,  // Steel platelegs (t)
-			20187,  // Steel platelegs (g)
-			1069    // Steel platelegs
+		group("Iron platelegs", "IRON_PLATELEGS",
+			ItemID.IRON_PLATELEGS_GOLD,                              // Iron platelegs (g)
+			ItemID.IRON_PLATELEGS                                    // Iron platelegs
 		);
 
-		addVariantGroup(
-			20190,  // Steel plateskirt (t)
-			20193,  // Steel plateskirt (g)
-			1083    // Steel plateskirt
+		group("Iron plateskirt", "IRON_PLATESKIRT",
+			ItemID.IRON_PLATESKIRT_GOLD,                             // Iron plateskirt (g)
+			ItemID.IRON_PLATESKIRT                                   // Iron plateskirt
 		);
 
-		addVariantGroup(
-			20175,  // Steel kiteshield (t)
-			20196,  // Steel kiteshield (g)
-			1193    // Steel kiteshield
+		group("Iron kiteshield", "IRON_KITESHIELD",
+			ItemID.IRON_KITESHIELD_TRIM,                             // Iron kiteshield (t)
+			ItemID.IRON_KITESHIELD_GOLD,                             // Iron kiteshield (g)
+			ItemID.IRON_KITESHIELD                                   // Iron kiteshield
 		);
 
-		// Black trimmed/gold-trimmed
-		addVariantGroup(
-			2587,   // Black full helm (t)
-			2595,   // Black full helm (g)
-			1165    // Black full helm
+		group("Steel trimmed/gold-trimmed", "STEEL_FULL_HELM",
+			ItemID.STEEL_FULL_HELM_TRIM,                             // Steel full helm (t)
+			ItemID.STEEL_FULL_HELM_GOLD,                             // Steel full helm (g)
+			ItemID.STEEL_FULL_HELM                                   // Steel full helm
 		);
 
-		addVariantGroup(
-			2583,   // Black platebody (t)
-			2591,   // Black platebody (g)
-			1125    // Black platebody
+		group("Steel platebody", "STEEL_PLATEBODY",
+			ItemID.STEEL_PLATEBODY_TRIM,                             // Steel platebody (t)
+			ItemID.STEEL_PLATEBODY_GOLD,                             // Steel platebody (g)
+			ItemID.STEEL_PLATEBODY                                   // Steel platebody
 		);
 
-		addVariantGroup(
-			2585,   // Black platelegs (t)
-			2593,   // Black platelegs (g)
-			1077    // Black platelegs
+		group("Steel platelegs", "STEEL_PLATELEGS",
+			ItemID.STEEL_PLATELEGS_TRIM,                             // Steel platelegs (t)
+			ItemID.STEEL_PLATELEGS                                   // Steel platelegs
 		);
 
-		addVariantGroup(
-			3472,   // Black plateskirt (t)
-			3473,   // Black plateskirt (g)
-			1089    // Black plateskirt
+		group("Steel plateskirt", "STEEL_PLATESKIRT",
+			ItemID.STEEL_PLATESKIRT_TRIM,                            // Steel plateskirt (t)
+			ItemID.STEEL_PLATESKIRT_GOLD,                            // Steel plateskirt (g)
+			ItemID.STEEL_PLATESKIRT                                  // Steel plateskirt
 		);
 
-		addVariantGroup(
-			2589,   // Black kiteshield (t)
-			2597,   // Black kiteshield (g)
-			1195    // Black kiteshield
+		group("Steel kiteshield", "STEEL_KITESHIELD",
+			ItemID.STEEL_KITESHIELD_TRIM,                            // Steel kiteshield (t)
+			ItemID.STEEL_KITESHIELD                                  // Steel kiteshield
 		);
 
-		// Mithril trimmed/gold-trimmed
-		addVariantGroup(
-			12283,  // Mithril full helm (t)
-			12293,  // Mithril full helm (g)
-			1159    // Mithril full helm
+		group("Black trimmed/gold-trimmed", "BLACK_FULL_HELM",
+			ItemID.BLACK_FULL_HELM_TRIM,                             // Black full helm (t)
+			ItemID.BLACK_FULL_HELM_GOLD,                             // Black full helm (g)
+			ItemID.BLACK_FULL_HELM                                   // Black full helm
 		);
 
-		addVariantGroup(
-			12287,  // Mithril platebody (t)
-			12297,  // Mithril platebody (g)
-			1121    // Mithril platebody
+		group("Black platebody", "BLACK_PLATEBODY",
+			ItemID.BLACK_PLATEBODY_TRIM,                             // Black platebody (t)
+			ItemID.BLACK_PLATEBODY_GOLD,                             // Black platebody (g)
+			ItemID.BLACK_PLATEBODY                                   // Black platebody
 		);
 
-		addVariantGroup(
-			12289,  // Mithril platelegs (t)
-			12299,  // Mithril platelegs (g)
-			1071    // Mithril platelegs
+		group("Black platelegs", "BLACK_PLATELEGS",
+			ItemID.BLACK_PLATELEGS_TRIM,                             // Black platelegs (t)
+			ItemID.BLACK_PLATELEGS_GOLD,                             // Black platelegs (g)
+			ItemID.BLACK_PLATELEGS                                   // Black platelegs
 		);
 
-		addVariantGroup(
-			12291,  // Mithril plateskirt (t)
-			12301,  // Mithril plateskirt (g)
-			1085    // Mithril plateskirt
+		group("Black plateskirt", "BLACK_PLATESKIRT",
+			ItemID.BLACK_PLATESKIRT_TRIM,                            // Black plateskirt (t)
+			ItemID.BLACK_PLATESKIRT_GOLD,                            // Black plateskirt (g)
+			ItemID.BLACK_PLATESKIRT                                  // Black plateskirt
 		);
 
-		addVariantGroup(
-			12285,  // Mithril kiteshield (t)
-			12295,  // Mithril kiteshield (g)
-			1197    // Mithril kiteshield
+		group("Black kiteshield", "BLACK_KITESHIELD",
+			ItemID.BLACK_KITESHIELD_TRIM,                            // Black kiteshield (t)
+			ItemID.BLACK_KITESHIELD_GOLD,                            // Black kiteshield (g)
+			ItemID.BLACK_KITESHIELD                                  // Black kiteshield
 		);
 
-		// Adamant trimmed/gold-trimmed
-		addVariantGroup(
-			2605,   // Adamant full helm (t)
-			2613,   // Adamant full helm (g)
-			1161    // Adamant full helm
+		group("Mithril trimmed/gold-trimmed", "MITHRIL_FULL_HELM",
+			ItemID.MITHRIL_FULL_HELM_GOLD,                           // Mithril full helm (g)
+			ItemID.MITHRIL_FULL_HELM_TRIM,                           // Mithril full helm (t)
+			ItemID.MITHRIL_FULL_HELM                                 // Mithril full helm
 		);
 
-		addVariantGroup(
-			2599,   // Adamant platebody (t)
-			2607,   // Adamant platebody (g)
-			1123    // Adamant platebody
+		group("Mithril platebody", "MITHRIL_PLATEBODY",
+			ItemID.MITHRIL_PLATEBODY_TRIM,                           // Mithril platebody (t)
+			ItemID.MITHRIL_PLATEBODY_GOLD,                           // Mithril platebody (g)
+			ItemID.MITHRIL_PLATEBODY                                 // Mithril platebody
 		);
 
-		addVariantGroup(
-			2601,   // Adamant platelegs (t)
-			2609,   // Adamant platelegs (g)
-			1073    // Adamant platelegs
+		group("Mithril platelegs", "MITHRIL_PLATELEGS",
+			ItemID.MITHRIL_PLATELEGS_TRIM,                           // Mithril platelegs (t)
+			ItemID.MITHRIL_PLATELEGS_GOLD,                           // Mithril platelegs (g)
+			ItemID.MITHRIL_PLATELEGS                                 // Mithril platelegs
 		);
 
-		addVariantGroup(
-			3474,   // Adamant plateskirt (t)
-			3475,   // Adamant plateskirt (g)
-			1091    // Adamant plateskirt
+		group("Mithril plateskirt", "MITHRIL_PLATESKIRT",
+			ItemID.MITHRIL_PLATESKIRT_TRIM,                          // Mithril plateskirt (t)
+			ItemID.MITHRIL_PLATESKIRT_GOLD,                          // Mithril plateskirt (g)
+			ItemID.MITHRIL_PLATESKIRT                                // Mithril plateskirt
 		);
 
-		addVariantGroup(
-			2603,   // Adamant kiteshield (t)
-			2611,   // Adamant kiteshield (g)
-			1199    // Adamant kiteshield
+		group("Mithril kiteshield", "MITHRIL_KITESHIELD",
+			ItemID.MITHRIL_KITESHIELD_TRIM,                          // Mithril kiteshield (t)
+			ItemID.MITHRIL_KITESHIELD_GOLD,                          // Mithril kiteshield (g)
+			ItemID.MITHRIL_KITESHIELD                                // Mithril kiteshield
 		);
 
-		// Rune trimmed/gold-trimmed/god
-		addVariantGroup(
-			2627,   // Rune full helm (t)
-			2619,   // Rune full helm (g)
-			1163,   // Rune full helm
-			2657,   // Saradomin full helm
-			2665,   // Zamorak full helm
-			2673,   // Guthix full helm
-			12466,  // Ancient full helm
-			12468,  // Armadyl full helm
-			12470   // Bandos full helm
+		group("Adamant trimmed/gold-trimmed", "ADAMANT_FULL_HELM",
+			ItemID.ADAMANT_FULL_HELM_TRIM,                           // Adamant full helm (t)
+			ItemID.ADAMANT_FULL_HELM_GOLD,                           // Adamant full helm (g)
+			ItemID.ADAMANT_FULL_HELM                                 // Adamant full helm
 		);
 
-		addVariantGroup(
-			2623,   // Rune platebody (t)
-			2615,   // Rune platebody (g)
-			1127,   // Rune platebody
-			2653,   // Saradomin platebody
-			2661,   // Zamorak platebody
-			2669,   // Guthix platebody
-			12460,  // Ancient platebody
-			12462,  // Armadyl platebody
-			12464   // Bandos platebody
+		group("Adamant platebody", "ADAMANT_PLATEBODY",
+			ItemID.ADAMANT_PLATEBODY_TRIM,                           // Adamant platebody (t)
+			ItemID.ADAMANT_PLATEBODY_GOLD,                           // Adamant platebody (g)
+			ItemID.ADAMANT_PLATEBODY                                 // Adamant platebody
 		);
 
-		addVariantGroup(
-			2625,   // Rune platelegs (t)
-			2617,   // Rune platelegs (g)
-			1079,   // Rune platelegs
-			2655,   // Saradomin platelegs
-			2663,   // Zamorak platelegs
-			2671,   // Guthix platelegs
-			12472,  // Ancient platelegs
-			12474,  // Armadyl platelegs
-			12476   // Bandos platelegs
+		group("Adamant platelegs", "ADAMANT_PLATELEGS",
+			ItemID.ADAMANT_PLATELEGS_TRIM,                           // Adamant platelegs (t)
+			ItemID.ADAMANT_PLATELEGS_GOLD,                           // Adamant platelegs (g)
+			ItemID.ADAMANT_PLATELEGS                                 // Adamant platelegs
 		);
 
-		addVariantGroup(
-			3477,   // Rune plateskirt (t)
-			3476,   // Rune plateskirt (g)
-			1093,   // Rune plateskirt
-			2659,   // Saradomin plateskirt
-			2667,   // Zamorak plateskirt
-			2675,   // Guthix plateskirt
-			12478,  // Ancient plateskirt
-			12480,  // Armadyl plateskirt
-			12482   // Bandos plateskirt
+		group("Adamant plateskirt", "ADAMANT_PLATESKIRT",
+			ItemID.ADAMANT_PLATESKIRT_TRIM,                          // Adamant plateskirt (t)
+			ItemID.ADAMANT_PLATESKIRT_GOLD,                          // Adamant plateskirt (g)
+			ItemID.ADAMANT_PLATESKIRT                                // Adamant plateskirt
 		);
 
-		addVariantGroup(
-			2629,   // Rune kiteshield (t)
-			2621,   // Rune kiteshield (g)
-			1201,   // Rune kiteshield
-			2651,   // Saradomin kiteshield
-			2659,   // Zamorak kiteshield
-			2677,   // Guthix kiteshield
-			12484,  // Ancient kiteshield
-			12486,  // Armadyl kiteshield
-			12488   // Bandos kiteshield
+		group("Adamant kiteshield", "ADAMANT_KITESHIELD",
+			ItemID.ADAMANT_KITESHIELD_TRIM,                          // Adamant kiteshield (t)
+			ItemID.ADAMANT_KITESHIELD_GOLD,                          // Adamant kiteshield (g)
+			ItemID.ADAMANT_KITESHIELD                                // Adamant kiteshield
+		);
+
+		// ==================== IRON/STEEL/MITH/ADDY/RUNE CROSSBOW (U) ====================
+
+		group("Bronze crossbow", "XBOWS_CROSSBOW",
+			ItemID.XBOWS_CROSSBOW_BRONZE,                            // Bronze crossbow
+			ItemID.XBOWS_CROSSBOW_UNSTRUNG_BRONZE                    // Bronze crossbow (u)
+		);
+
+		group("Iron crossbow", "XBOWS_CROSSBOW",
+			ItemID.XBOWS_CROSSBOW_IRON,                              // Iron crossbow
+			ItemID.XBOWS_CROSSBOW_UNSTRUNG_IRON                      // Iron crossbow (u)
+		);
+
+		group("Steel crossbow (u)", "XBOWS_CROSSBOW",
+			ItemID.XBOWS_CROSSBOW_UNSTRUNG_STEEL,                    // Steel crossbow (u)
+			ItemID.XBOWS_CROSSBOW_STEEL                              // Steel crossbow
+		);
+
+		group("Mithril crossbow (u)", "XBOWS_CROSSBOW",
+			ItemID.XBOWS_CROSSBOW_UNSTRUNG_MITHRIL,                  // Mithril crossbow (u)
+			ItemID.XBOWS_CROSSBOW_MITHRIL                            // Mithril crossbow
+		);
+
+		group("Adamant crossbow (u)", "XBOWS_CROSSBOW",
+			ItemID.XBOWS_CROSSBOW_UNSTRUNG_ADAMANTITE,               // Adamant crossbow (u)
+			ItemID.XBOWS_CROSSBOW_ADAMANTITE                         // Adamant crossbow
+		);
+
+		// ==================== ANCIENT STAFF VARIANTS ====================
+
+		group("Ancient staff and Ancient sceptre", "STAFF_OF_ZAROS|ANCIENT_SCEPTRE",
+			ItemID.STAFF_OF_ZAROS,                                   // Ancient staff
+			ItemID.ANCIENT_SCEPTRE,                                  // Ancient sceptre
+			ItemID.ANCIENT_SCEPTRE_TROUVER                           // Ancient sceptre (l)
+		);
+
+		// ==================== GODSWORDS ====================
+
+		group("Armadyl godsword", "AGS",
+			ItemID.AGS,                                              // Armadyl godsword
+			ItemID.AGSG                                              // Armadyl godsword (or)
+		);
+
+		group("Bandos godsword", "BGS",
+			ItemID.BGS,                                              // Bandos godsword
+			ItemID.BGSG                                              // Bandos godsword (or)
+		);
+
+		group("Saradomin godsword", "SGS",
+			ItemID.SGS,                                              // Saradomin godsword
+			ItemID.SGSG                                              // Saradomin godsword (or)
+		);
+
+		group("Zamorak godsword", "ZGS",
+			ItemID.ZGS,                                              // Zamorak godsword
+			ItemID.ZGSG                                              // Zamorak godsword (or)
+		);
+
+		// ==================== JEWELRY ====================
+
+		group("Amulet of fury and Amulet of blood fury", "ONYX_AMULET|FURY|BLOOD_AMULET",
+			ItemID.ENCHANTED_ONYX_AMULET,                            // Amulet of fury
+			ItemID.FURY_ORNAMENT,                                    // Amulet of fury (or)
+			ItemID.BLOOD_AMULET                                      // Amulet of blood fury
+		);
+
+		group("Amulet of torture", "ZENYTE_AMULET",
+			ItemID.ZENYTE_AMULET_ENCHANTED,                          // Amulet of torture
+			ItemID.ZENYTE_AMULET_ORNAMENT                            // Amulet of torture (or)
+		);
+
+		group("Necklace of anguish", "ZENYTE_NECKLACE",
+			ItemID.ZENYTE_NECKLACE_ENCHANTED,                        // Necklace of anguish
+			ItemID.ZENYTE_NECKLACE_ORNAMENT                          // Necklace of anguish (or)
+		);
+
+		group("Tormented bracelet", "ZENYTE_BRACELET_ENCHANTED",
+			ItemID.ZENYTE_BRACELET_ENCHANTED,                        // Tormented bracelet
+			ItemID.ZENYTE_BRACELET_ENCHANTED_ORNAMENT                // Tormented bracelet (or)
+		);
+
+		group("Occult necklace", "OCCULT_NECKLACE",
+			ItemID.OCCULT_NECKLACE,                                  // Occult necklace
+			ItemID.OCCULT_NECKLACE_ORNAMENT                          // Occult necklace (or)
+		);
+
+		group("Berserker necklace", "JEWL_BESERKER_NECKLACE",
+			ItemID.JEWL_BESERKER_NECKLACE,                           // Berserker necklace
+			ItemID.JEWL_BESERKER_NECKLACE_ORNAMENT                   // Berserker necklace (or)
+		);
+
+		// ==================== RINGS ====================
+
+		group("Berserker ring", "BERZERKER_RING",
+			ItemID.BERZERKER_RING,                                   // Berserker ring
+			ItemID.NZONE_BERZERKER_RING,                             // Berserker ring (i)
+			ItemID.SW_BERZERKER_RING,                                // Berserker ring (i)
+			ItemID.PVPA_BERZERKER_RING                               // Berserker ring (i)
+		);
+
+		group("Archers ring", "RANGER_RING",
+			ItemID.RANGER_RING,                                      // Archers ring
+			ItemID.NZONE_RANGER_RING,                                // Archers ring (i)
+			ItemID.SW_RANGER_RING,                                   // Archers ring (i)
+			ItemID.PVPA_RANGER_RING                                  // Archers ring (i)
+		);
+
+		group("Seers ring", "SEER_RING",
+			ItemID.SEER_RING,                                        // Seers ring
+			ItemID.NZONE_SEER_RING,                                  // Seers ring (i)
+			ItemID.SW_SEER_RING,                                     // Seers ring (i)
+			ItemID.PVPA_SEER_RING                                    // Seers ring (i)
+		);
+
+		group("Warrior ring", "WARRIOR_RING",
+			ItemID.WARRIOR_RING,                                     // Warrior ring
+			ItemID.NZONE_WARRIOR_RING,                               // Warrior ring (i)
+			ItemID.SW_WARRIOR_RING,                                  // Warrior ring (i)
+			ItemID.PVPA_WARRIOR_RING                                 // Warrior ring (i)
+		);
+
+		group("Treasonous ring", "SHARP_RING",
+			ItemID.SHARP_RING,                                       // Treasonous ring
+			ItemID.NZONE_SHARP_RING,                                 // Treasonous ring (i)
+			ItemID.SW_SHARP_RING,                                    // Treasonous ring (i)
+			ItemID.PVPA_SHARP_RING                                   // Treasonous ring (i)
+		);
+
+		group("Tyrannical ring", "HEAVY_RING",
+			ItemID.HEAVY_RING,                                       // Tyrannical ring
+			ItemID.NZONE_HEAVY_RING,                                 // Tyrannical ring (i)
+			ItemID.SW_HEAVY_RING,                                    // Tyrannical ring (i)
+			ItemID.PVPA_HEAVY_RING                                   // Tyrannical ring (i)
+		);
+
+		group("Ring of the gods", "ROTG",
+			ItemID.ROTG,                                             // Ring of the gods
+			ItemID.NZONE_ROTG,                                       // Ring of the gods (i)
+			ItemID.SW_ROTG,                                          // Ring of the gods (i)
+			ItemID.PVPA_ROTG                                         // Ring of the gods (i)
+		);
+
+		group("Ring of wealth", "RING_OF_WEALTH",
+			ItemID.RING_OF_WEALTH,                                   // Ring of wealth
+			ItemID.RING_OF_WEALTH_I                                  // Ring of wealth (i)
+		);
+
+		// ==================== PROSPECTOR KIT ====================
+
+		group("Prospector helmet", "MOTHERLODE_REWARD_HAT",
+			ItemID.MOTHERLODE_REWARD_HAT,                            // Prospector helmet
+			ItemID.MOTHERLODE_REWARD_HAT_GOLD                        // Golden prospector helmet
+		);
+
+		group("Prospector jacket", "MOTHERLODE_REWARD_TOP",
+			ItemID.MOTHERLODE_REWARD_TOP,                            // Prospector jacket
+			ItemID.MOTHERLODE_REWARD_TOP_GOLD                        // Golden prospector jacket
+		);
+
+		group("Prospector legs", "MOTHERLODE_REWARD_LEGS",
+			ItemID.MOTHERLODE_REWARD_LEGS,                           // Prospector legs
+			ItemID.MOTHERLODE_REWARD_LEGS_GOLD                       // Golden prospector legs
+		);
+
+		group("Prospector boots", "MOTHERLODE_REWARD_BOOTS",
+			ItemID.MOTHERLODE_REWARD_BOOTS,                          // Prospector boots
+			ItemID.MOTHERLODE_REWARD_BOOTS_GOLD                      // Golden prospector boots
+		);
+
+		// ==================== INFINITY ROBES ====================
+
+		group("Infinity hat", "INFINITY",
+			ItemID.MAGICTRAINING_INFINITYHAT,                        // Infinity hat
+			ItemID.INFINITY_HAT_TRIM,                                // Dark infinity hat
+			ItemID.INFINITY_HAT_GOLD                                 // Light infinity hat
+		);
+
+		group("Infinity top", "INFINITY",
+			ItemID.MAGICTRAINING_INFINITYTOP,                        // Infinity top
+			ItemID.INFINITY_TOP_TRIM,                                // Dark infinity top
+			ItemID.INFINITY_TOP_GOLD                                 // Light infinity top
+		);
+
+		group("Infinity bottoms", "INFINITY",
+			ItemID.MAGICTRAINING_INFINITYBOTTOM,                     // Infinity bottoms
+			ItemID.INFINITY_BOTTOM_TRIM,                             // Dark infinity bottoms
+			ItemID.INFINITY_BOTTOM_GOLD                              // Light infinity bottoms
+		);
+
+		// ==================== ANCESTRAL ROBES ====================
+
+		group("Ancestral hat", "ANCESTRAL_HAT",
+			ItemID.ANCESTRAL_HAT,                                    // Ancestral hat
+			ItemID.ANCESTRAL_HAT_TWISTED                             // Twisted ancestral hat
+		);
+
+		group("Ancestral robe top", "ANCESTRAL_ROBE_TOP",
+			ItemID.ANCESTRAL_ROBE_TOP,                               // Ancestral robe top
+			ItemID.ANCESTRAL_ROBE_TOP_TWISTED                        // Twisted ancestral robe top
+		);
+
+		group("Ancestral robe bottom", "ANCESTRAL_ROBE_BOTTOM",
+			ItemID.ANCESTRAL_ROBE_BOTTOM,                            // Ancestral robe bottom
+			ItemID.ANCESTRAL_ROBE_BOTTOM_TWISTED                     // Twisted ancestral robe bottom
+		);
+
+		// ==================== GOD CAPES ====================
+
+		group("Saradomin cape", "SARADOMIN_CAPE",
+			ItemID.SARADOMIN_CAPE,                                   // Saradomin cape
+			ItemID.MA2_SARADOMIN_CAPE                                // Imbued Saradomin cape
+		);
+
+		group("Zamorak cape", "ZAMORAK_CAPE",
+			ItemID.ZAMORAK_CAPE,                                     // Zamorak cape
+			ItemID.MA2_ZAMORAK_CAPE                                  // Imbued Zamorak cape
+		);
+
+		group("Guthix cape", "GUTHIX_CAPE",
+			ItemID.GUTHIX_CAPE,                                      // Guthix cape
+			ItemID.MA2_GUTHIX_CAPE                                   // Imbued Guthix cape
+		);
+
+		// ==================== SALVE AMULET ====================
+
+		group("Salve amulet", "SALVE|CRYSTALSHARD_NECKLACE",
+			ItemID.CRYSTALSHARD_NECKLACE,                            // Salve amulet
+			ItemID.LOTR_CRYSTALSHARD_NECKLACE_UPGRADE,               // Salve amulet (e)
+			ItemID.NZONE_SALVE_AMULET,                               // Salve amulet(i)
+			ItemID.NZONE_SALVE_AMULET_E                              // Salve amulet(ei)
+		);
+
+		// ==================== BLACK MASK ====================
+
+		group("Black mask", "BLACK_MASK",
+			ItemID.HARMLESS_BLACK_MASK_10,                           // Black mask (10)
+			ItemID.HARMLESS_BLACK_MASK_9,                            // Black mask (9)
+			ItemID.HARMLESS_BLACK_MASK_8,                            // Black mask (8)
+			ItemID.HARMLESS_BLACK_MASK_7,                            // Black mask (7)
+			ItemID.HARMLESS_BLACK_MASK_6,                            // Black mask (6)
+			ItemID.HARMLESS_BLACK_MASK_5,                            // Black mask (5)
+			ItemID.HARMLESS_BLACK_MASK_4,                            // Black mask (4)
+			ItemID.HARMLESS_BLACK_MASK_3,                            // Black mask (3)
+			ItemID.HARMLESS_BLACK_MASK_2,                            // Black mask (2)
+			ItemID.HARMLESS_BLACK_MASK_1,                            // Black mask (1)
+			ItemID.HARMLESS_BLACK_MASK,                              // Black mask
+			ItemID.NZONE_BLACK_MASK,                                 // Black mask (i)
+			ItemID.SW_BLACK_MASK,                                    // Black mask (i)
+			ItemID.PVPA_BLACK_MASK,                                  // Black mask (i)
+			ItemID.NZONE_BLACK_MASK_10                               // Black mask (10) (i)
+		);
+
+		// ==================== RUNE SCIMITAR ====================
+
+		group("Rune scimitar", "RUNE_SCIMITAR",
+			ItemID.RUNE_SCIMITAR,                                    // Rune scimitar
+			ItemID.RUNE_SCIMITAR_GUTHIX,                             // Rune scimitar
+			ItemID.RUNE_SCIMITAR_SARADOMIN,                          // Rune scimitar
+			ItemID.RUNE_SCIMITAR_ZAMORAK                             // Rune scimitar
+		);
+
+		// ==================== GRANITE MAUL ====================
+
+		group("Granite maul", "GRANITE_MAUL",
+			ItemID.GRANITE_MAUL,                                     // Granite maul
+			ItemID.GRANITE_MAUL_PRETTY,                              // Granite maul
+			ItemID.GRANITE_MAUL_PLUS                                 // Granite maul
+		);
+
+		// ==================== ODIUM/MALEDICTION WARDS ====================
+
+		group("Odium ward", "ODIUM_WARD",
+			ItemID.ODIUM_WARD,                                       // Odium ward
+			ItemID.ODIUM_WARD_PRETTY                                 // Odium ward
+		);
+
+		group("Malediction ward", "MALEDICTION_WARD",
+			ItemID.MALEDICTION_WARD,                                 // Malediction ward
+			ItemID.MALEDICTION_WARD_PRETTY                           // Malediction ward
+		);
+
+		// ==================== STEAM/LAVA BATTLESTAFF ====================
+
+		group("Steam battlestaff", "STEAM_BATTLESTAFF",
+			ItemID.STEAM_BATTLESTAFF,                                // Steam battlestaff
+			ItemID.STEAM_BATTLESTAFF_PRETTY                          // Steam battlestaff
+		);
+
+		group("Lava battlestaff", "LAVA_BATTLESTAFF",
+			ItemID.LAVA_BATTLESTAFF,                                 // Lava battlestaff
+			ItemID.LAVA_BATTLESTAFF_PRETTY                           // Lava battlestaff
+		);
+
+		// ==================== MYSTIC ROBES (All Color Variants) ====================
+
+		group("Mystic hat", "MYSTIC_HAT",
+			ItemID.MYSTIC_HAT,                                       // Mystic hat
+			ItemID.MYSTIC_HAT_DARK,                                  // Mystic hat (dark)
+			ItemID.MYSTIC_HAT_LIGHT,                                 // Mystic hat (light)
+			ItemID.MYSTIC_HAT_DUSK                                   // Mystic hat (dusk)
+		);
+
+		group("Mystic robe top", "MYSTIC_ROBE_TOP",
+			ItemID.MYSTIC_ROBE_TOP,                                  // Mystic robe top
+			ItemID.MYSTIC_ROBE_TOP_DARK,                             // Mystic robe top (dark)
+			ItemID.MYSTIC_ROBE_TOP_LIGHT,                            // Mystic robe top (light)
+			ItemID.MYSTIC_ROBE_TOP_DUSK                              // Mystic robe top (dusk)
+		);
+
+		group("Mystic robe bottom", "MYSTIC_ROBE_BOTTOM",
+			ItemID.MYSTIC_ROBE_BOTTOM,                               // Mystic robe bottom
+			ItemID.MYSTIC_ROBE_BOTTOM_DARK,                          // Mystic robe bottom (dark)
+			ItemID.MYSTIC_ROBE_BOTTOM_LIGHT,                         // Mystic robe bottom (light)
+			ItemID.MYSTIC_ROBE_BOTTOM_DUSK                           // Mystic robe bottom (dusk)
+		);
+
+		group("Mystic gloves", "MYSTIC_GLOVES",
+			ItemID.MYSTIC_GLOVES,                                    // Mystic gloves
+			ItemID.MYSTIC_GLOVES_DARK,                               // Mystic gloves (dark)
+			ItemID.MYSTIC_GLOVES_LIGHT,                              // Mystic gloves (light)
+			ItemID.MYSTIC_GLOVES_DUSK                                // Mystic gloves (dusk)
+		);
+
+		group("Mystic boots", "MYSTIC_BOOTS",
+			ItemID.MYSTIC_BOOTS,                                     // Mystic boots
+			ItemID.MYSTIC_BOOTS_DARK,                                // Mystic boots (dark)
+			ItemID.MYSTIC_BOOTS_LIGHT,                               // Mystic boots (light)
+			ItemID.MYSTIC_BOOTS_DUSK                                 // Mystic boots (dusk)
+		);
+
+		// ==================== CANNON (Shattered Relics) ====================
+
+		group("Cannon base", "TWPART1|MULTICANNON_BASE",
+			ItemID.TWPART1,                                          // Cannon base
+			ItemID.LEAGUE_3_MULTICANNON_BASE                         // Cannon base (or)
+		);
+
+		group("Cannon stand", "TWPART2|MULTICANNON_STAND",
+			ItemID.TWPART2,                                          // Cannon stand
+			ItemID.LEAGUE_3_MULTICANNON_STAND                        // Cannon stand (or)
+		);
+
+		group("Cannon barrels", "TWPART3|MULTICANNON_BARRELS",
+			ItemID.TWPART3,                                          // Cannon barrels
+			ItemID.LEAGUE_3_MULTICANNON_BARRELS                      // Cannon barrels (or)
+		);
+
+		group("Cannon furnace", "TWPART4|MULTICANNON_FURNACE",
+			ItemID.TWPART4,                                          // Cannon furnace
+			ItemID.LEAGUE_3_MULTICANNON_FURNACE                      // Cannon furnace (or)
+		);
+
+		// ==================== ADDITIONAL RINGS ====================
+
+		group("Ring of suffering", "ZENYTE_RING_ENCHANTED",
+			ItemID.ZENYTE_RING_ENCHANTED,                            // Ring of suffering
+			ItemID.NZONE_ZENYTE_RING_ENCHANTED,                      // Ring of suffering (i)
+			ItemID.NZONE_ZENYTE_RING_ENCHANTED_RECOIL,               // Ring of suffering (ri)
+			ItemID.SW_ZENYTE_RING_ENCHANTED,                         // Ring of suffering (i)
+			ItemID.PVPA_ZENYTE_RING_ENCHANTED                        // Ring of suffering (i)
+		);
+
+		group("Granite ring", "GRANITE_RING",
+			ItemID.GRANITE_RING,                                     // Granite ring
+			ItemID.NZONE_GRANITE_RING                                // Granite ring (i)
+		);
+
+		// ==================== MAGIC SHORTBOW ====================
+
+		group("Magic shortbow", "MAGIC_SHORTBOW",
+			ItemID.MAGIC_SHORTBOW,                                   // Magic shortbow
+			ItemID.MAGIC_SHORTBOW_I                                  // Magic shortbow (i)
+		);
+
+		// ==================== SERPENTINE HELMS ====================
+
+		group("Serpentine helm", "SERPENTINE_HELM",
+			ItemID.SERPENTINE_HELM,                                  // Serpentine helm (uncharged)
+			ItemID.SERPENTINE_HELM_CHARGED,                          // Serpentine helm
+			ItemID.SERPENTINE_HELM_CYAN,                             // Tanzanite helm (uncharged)
+			ItemID.SERPENTINE_HELM_CHARGED_CYAN,                     // Tanzanite helm
+			ItemID.SERPENTINE_HELM_RED,                              // Magma helm (uncharged)
+			ItemID.SERPENTINE_HELM_CHARGED_RED                       // Magma helm
+		);
+
+		// ==================== THEATRE OF BLOOD WEAPONS ====================
+
+		group("Ghrazi rapier", "GHRAZI_RAPIER",
+			ItemID.GHRAZI_RAPIER,                                    // Ghrazi rapier
+			ItemID.GHRAZI_RAPIER_OR                                  // Holy ghrazi rapier
+		);
+
+		group("Scythe of vitur", "SCYTHE_OF_VITUR",
+			ItemID.SCYTHE_OF_VITUR,                                  // Scythe of Vitur
+			ItemID.SCYTHE_OF_VITUR_UNCHARGED,                        // Scythe of Vitur (uncharged)
+			ItemID.SCYTHE_OF_VITUR_OR,                               // Holy Scythe of Vitur
+			ItemID.SCYTHE_OF_VITUR_UNCHARGED_OR,                     // Holy Scythe of Vitur (uncharged)
+			ItemID.SCYTHE_OF_VITUR_BL,                               // Sanguine Scythe of Vitur
+			ItemID.SCYTHE_OF_VITUR_UNCHARGED_BL                      // Sanguine Scythe of Vitur (uncharged)
+		);
+
+		group("Sanguinesti staff", "SANGUINESTI_STAFF",
+			ItemID.SANGUINESTI_STAFF,                                // Sanguinesti staff
+			ItemID.SANGUINESTI_STAFF_UNCHARGED,                      // Sanguinesti staff (uncharged)
+			ItemID.SANGUINESTI_STAFF_OR,                             // Holy sanguinesti staff
+			ItemID.SANGUINESTI_STAFF_UNCHARGED_OR                    // Holy sanguinesti staff (uncharged)
+		);
+
+		// ==================== HEAVY BALLISTA ====================
+
+		group("Heavy ballista", "HEAVY_BALLISTA",
+			ItemID.HEAVY_BALLISTA,                                   // Heavy ballista
+			ItemID.HEAVY_BALLISTA_ORNAMENT                           // Heavy ballista (or)
+		);
+
+		// ==================== TZHAAR WEAPONS ====================
+
+		group("Tzhaar-ket-om", "TZHAAR_MAUL",
+			ItemID.TZHAAR_MAUL,                                      // Tzhaar-ket-om
+			ItemID.TZHAAR_MAUL_T                                     // Tzhaar-ket-om (t)
+		);
+
+		// ==================== ELDER MAUL ====================
+
+		group("Elder maul", "ELDER_MAUL",
+			ItemID.ELDER_MAUL,                                       // Elder maul
+			ItemID.ELDER_MAUL_ORNAMENT                               // Elder maul (or)
+		);
+
+		// ==================== OSMUMTEN'S FANG ====================
+
+		group("Osmumten's fang", "OSMUMTENS_FANG",
+			ItemID.OSMUMTENS_FANG,                                   // Osmumten's fang
+			ItemID.OSMUMTENS_FANG_ORNAMENT                           // Osmumten's fang (or)
+		);
+
+		// ==================== NEITIZNOT HELM ====================
+
+		group("Helm of Neitiznot", "FRIS_KINGLY_HELM",
+			ItemID.FRIS_KINGLY_HELM,                                 // Helm of Neitiznot
+			ItemID.BH_FRIS_KINGLY_HELM_CORRUPTED                     // Helm of Neitiznot (or)
+		);
+
+		// ==================== ELIDINIS' WARD ====================
+
+		group("Elidinis' ward", "ELIDINIS_WARD",
+			ItemID.ELIDINIS_WARD,                                    // Elidinis' ward
+			ItemID.ELIDINIS_WARD_FORTIFIED                           // Elidinis' ward (f)
+		);
+
+		// ==================== TUMEKEN'S SHADOW ====================
+
+		group("Tumeken's shadow", "TUMEKENS_SHADOW",
+			ItemID.TUMEKENS_SHADOW,                                  // Tumeken's shadow
+			ItemID.TUMEKENS_SHADOW_UNCHARGED                         // Tumeken's shadow (uncharged)
+		);
+
+		// ==================== VENATOR BOW ====================
+
+		group("Venator bow", "VENATOR_BOW",
+			ItemID.VENATOR_BOW,                                      // Venator bow
+			ItemID.VENATOR_BOW_UNCHARGED,                            // Venator bow (uncharged)
+			ItemID.VENATOR_BOW_ORNAMENT                              // Echo venator bow
+		);
+
+		// ==================== TORVA ARMOR ====================
+
+		group("Torva full helm", "TORVA_HELM",
+			ItemID.TORVA_HELM,                                       // Torva full helm
+			ItemID.TORVA_HELM_SANGUINE                               // Sanguine torva full helm
+		);
+
+		group("Torva platebody", "TORVA_CHEST",
+			ItemID.TORVA_CHEST,                                      // Torva platebody
+			ItemID.TORVA_CHEST_SANGUINE                              // Sanguine torva platebody
+		);
+
+		group("Torva platelegs", "TORVA_LEGS",
+			ItemID.TORVA_LEGS,                                       // Torva platelegs
+			ItemID.TORVA_LEGS_SANGUINE                               // Sanguine torva platelegs
+		);
+
+		// ==================== MASORI ARMOR ====================
+
+		group("Masori mask", "MASORI_MASK",
+			ItemID.MASORI_MASK,                                      // Masori mask
+			ItemID.MASORI_MASK_FORTIFIED                             // Masori mask (f)
+		);
+
+		group("Masori body", "MASORI_BODY",
+			ItemID.MASORI_BODY,                                      // Masori body
+			ItemID.MASORI_BODY_FORTIFIED                             // Masori body (f)
+		);
+
+		group("Masori chaps", "MASORI_CHAPS",
+			ItemID.MASORI_CHAPS,                                     // Masori chaps
+			ItemID.MASORI_CHAPS_FORTIFIED                            // Masori chaps (f)
+		);
+
+		// ==================== ELDER CHAOS ROBES ====================
+
+		group("Elder chaos hood", "ELDERCHAOS_HOOD",
+			ItemID.ELDERCHAOS_HOOD,                                  // Elder chaos hood
+			ItemID.ELDERCHAOS_HOOD_PRETTY                            // Elder chaos hood (or)
+		);
+
+		group("Elder chaos top", "ELDERCHAOS_TOP",
+			ItemID.ELDERCHAOS_TOP,                                   // Elder chaos top
+			ItemID.ELDERCHAOS_TOP_PRETTY                             // Elder chaos top (or)
+		);
+
+		group("Elder chaos robe", "ELDERCHAOS_BOTTOM",
+			ItemID.ELDERCHAOS_BOTTOM,                                // Elder chaos robe
+			ItemID.ELDERCHAOS_BOTTOM_PRETTY                          // Elder chaos robe (or)
+		);
+
+		// ==================== GOD BOOKS ====================
+
+		group("Holy book", "SARADOMIN",
+			ItemID.SARADOMINBOOK_COMPLETE,                           // Holy book
+			ItemID.LEAGUE_3_BOOK_SARADOMIN                           // Holy book (or)
+		);
+
+		group("Unholy book", "ZAMORAK",
+			ItemID.ZAMORAKBOOK_COMPLETE,                             // Unholy book
+			ItemID.LEAGUE_3_BOOK_ZAMORAK                             // Unholy book (or)
+		);
+
+		group("Book of Balance", "GUTHIX",
+			ItemID.GUTHIXBOOK_COMPLETE,                              // Book of Balance
+			ItemID.LEAGUE_3_BOOK_GUTHIX                              // Book of Balance (or)
+		);
+
+		group("Book of War", "BANDOS",
+			ItemID.BANDOSBOOK_COMPLETE,                              // Book of War
+			ItemID.LEAGUE_3_BOOK_BANDOS                              // Book of War (or)
+		);
+
+		group("Book of Law", "ARMADYL",
+			ItemID.ARMADYLBOOK_COMPLETE,                             // Book of Law
+			ItemID.LEAGUE_3_BOOK_ARMADYL                             // Book of Law (or)
+		);
+
+		group("Book of Darkness", "ZAROS",
+			ItemID.ZAROSBOOK_COMPLETE,                               // Book of Darkness
+			ItemID.LEAGUE_3_BOOK_ZAROS                               // Book of Darkness (or)
+		);
+
+		// ==================== CHARGED/UNCHARGED ITEMS ====================
+
+		group("Bracelet of ethereum", "WILD_CAVE_BRACELET",
+			ItemID.WILD_CAVE_BRACELET_CHARGED,                       // Bracelet of ethereum
+			ItemID.WILD_CAVE_BRACELET_UNCHARGED                      // Bracelet of ethereum (uncharged)
+		);
+
+		group("Ring of endurance", "RING_OF_ENDURANCE",
+			ItemID.RING_OF_ENDURANCE,                                // Ring of endurance
+			ItemID.RING_OF_ENDURANCE_NOCHARGES                       // Ring of endurance (uncharged)
+		);
+
+		group("Celestial ring", "CELESTIAL_RING",
+			ItemID.CELESTIAL_RING,                                   // Celestial ring (uncharged)
+			ItemID.CELESTIAL_RING_CHARGED                            // Celestial ring
+		);
+
+		group("Pharaoh's sceptre (all consolidated)", "SCEPTRE",
+			ItemID.NTK_JEWELLED_SCEPTRE_3,                           // Pharaoh's sceptre
+			ItemID.NTK_JEWELLED_SCEPTRE_2,                           // Pharaoh's sceptre
+			ItemID.NTK_JEWELLED_SCEPTRE_1,                           // Pharaoh's sceptre
+			ItemID.NTK_JEWELLED_SCEPTRE_0,                           // Pharaoh's sceptre
+			ItemID.PHARAOHS_SCEPTRE,                                 // Pharaoh's sceptre (uncharged)
+			ItemID.PHARAOHS_SCEPTRE_CHARGED,                         // Pharaoh's sceptre
+			ItemID.PHARAOHS_SCEPTRE_CHARGED_INITIAL                  // Pharaoh's sceptre
+		);
+
+		group("Trident of the seas", "TOTS",
+			ItemID.TOTS,                                             // Trident of the Seas (full)
+			ItemID.TOTS_CHARGED,                                     // Trident of the Seas
+			ItemID.TOTS_UNCHARGED,                                   // Uncharged trident
+			ItemID.TOTS_CHARGED_ORN,                                 // Trident of the Seas (o)
+			ItemID.TOTS_ORN,                                         // Trident of the Seas (full) (o)
+			ItemID.TOTS_UNCHARGED_ORN                                // Uncharged trident (o)
+		);
+
+		group("Trident of the swamp", "TOXIC_TOTS",
+			ItemID.TOXIC_TOTS_CHARGED,                               // Trident of the Swamp
+			ItemID.TOXIC_TOTS_UNCHARGED,                             // Uncharged toxic trident
+			ItemID.TOXIC_TOTS_CHARGED_ORN,                           // Trident of the Swamp (o)
+			ItemID.TOXIC_TOTS_UNCHARGED_ORN                          // Uncharged toxic trident (o)
+		);
+
+		group("Trident of the seas (e)", "TOTS_I",
+			ItemID.TOTS_I_CHARGED,                                   // Trident of the Seas (e)
+			ItemID.TOTS_I_UNCHARGED,                                 // Uncharged trident (e)
+			ItemID.TOTS_I_CHARGED_ORN,                               // Trident of the Seas (e) (o)
+			ItemID.TOTS_I_UNCHARGED_ORN                              // Uncharged trident (e) (o)
+		);
+
+		group("Trident of the swamp (e)", "TOXIC_TOTS_I",
+			ItemID.TOXIC_TOTS_I_CHARGED,                             // Trident of the Swamp (e)
+			ItemID.TOXIC_TOTS_I_UNCHARGED,                           // Uncharged toxic trident (e)
+			ItemID.TOXIC_TOTS_I_CHARGED_ORN,                         // Trident of the Swamp (e) (o)
+			ItemID.TOXIC_TOTS_I_UNCHARGED_ORN                        // Uncharged toxic trident (e) (o)
+		);
+
+		// ==================== REVENANT / WILDERNESS WEAPONS ====================
+
+		group("Craw's bow / Webweaver bow", "WILD_CAVE",
+			ItemID.WILD_CAVE_BOW_UNCHARGED,                          // Craw's bow (u)
+			ItemID.WILD_CAVE_BOW_CHARGED,                            // Craw's bow
+			ItemID.WILD_CAVE_WEBWEAVER_CHARGED                       // Webweaver bow
+		);
+
+		group("Thammaron's sceptre / Accursed sceptre", "WILD_CAVE",
+			ItemID.WILD_CAVE_SCEPTRE_UNCHARGED,                      // Thammaron's sceptre (u)
+			ItemID.WILD_CAVE_SCEPTRE_CHARGED,                        // Thammaron's sceptre
+			ItemID.WILD_CAVE_ACCURSED_UNCHARGED,                     // Accursed sceptre (u)
+			ItemID.WILD_CAVE_ACCURSED_CHARGED                        // Accursed sceptre
+		);
+
+		group("Viggora's chainmace / Ursine chainmace", "WILD_CAVE",
+			ItemID.WILD_CAVE_CHAINMACE_UNCHARGED,                    // Viggora's chainmace (u)
+			ItemID.WILD_CAVE_CHAINMACE_CHARGED,                      // Viggora's chainmace
+			ItemID.WILD_CAVE_URSINE_UNCHARGED,                       // Ursine chainmace (u)
+			ItemID.WILD_CAVE_URSINE_CHARGED                          // Ursine chainmace
+		);
+
+		// ==================== ARCLIGHT/DARKLIGHT ====================
+
+		group("Darklight", "LIGHT",
+			ItemID.DARKLIGHT,                                        // Darklight
+			ItemID.ARCLIGHT,                                         // Arclight
+			ItemID.ARCLIGHT_INACTIVE                                 // Arclight (inactive)
+		);
+
+		// ==================== MAX CAPE VARIANTS ====================
+
+		group("Mythical max cape", "MYTHICAL",
+			ItemID.MYTHICAL_CAPE,                                    // Mythical cape
+			ItemID.SKILLCAPE_MAX_MYTHICAL                            // Mythical max cape
+		);
+
+		// ==================== ACHIEVEMENT DIARY ITEMS ====================
+
+		group("Explorer's ring", "LUMBRIDGE_RING",
+			ItemID.LUMBRIDGE_RING_EASY,                              // Explorer's ring 1
+			ItemID.LUMBRIDGE_RING_MEDIUM,                            // Explorer's ring 2
+			ItemID.LUMBRIDGE_RING_HARD,                              // Explorer's ring 3
+			ItemID.LUMBRIDGE_RING_ELITE                              // Explorer's ring 4
+		);
+
+		group("Ardougne cloak", "ARDY_CAPE",
+			ItemID.ARDY_CAPE_EASY,                                   // Ardougne cloak 1
+			ItemID.ARDY_CAPE_MEDIUM,                                 // Ardougne cloak 2
+			ItemID.ARDY_CAPE_HARD,                                   // Ardougne cloak 3
+			ItemID.ARDY_CAPE_ELITE                                   // Ardougne cloak 4
+		);
+
+		group("Desert amulet", "DESERT_AMULET",
+			ItemID.DESERT_AMULET_EASY,                               // Desert amulet 1
+			ItemID.DESERT_AMULET_MEDIUM,                             // Desert amulet 2
+			ItemID.DESERT_AMULET_HARD,                               // Desert amulet 3
+			ItemID.DESERT_AMULET_ELITE                               // Desert amulet 4
+		);
+
+		group("Falador shield", "FALADOR_SHIELD",
+			ItemID.FALADOR_SHIELD_EASY,                              // Falador shield 1
+			ItemID.FALADOR_SHIELD_MEDIUM,                            // Falador shield 2
+			ItemID.FALADOR_SHIELD_HARD,                              // Falador shield 3
+			ItemID.FALADOR_SHIELD_ELITE                              // Falador shield 4
+		);
+
+		group("Fremennik sea boots", "FREMENNIK_BOOTS",
+			ItemID.FREMENNIK_BOOTS_EASY,                             // Fremennik sea boots 1
+			ItemID.FREMENNIK_BOOTS_MEDIUM,                           // Fremennik sea boots 2
+			ItemID.FREMENNIK_BOOTS_HARD,                             // Fremennik sea boots 3
+			ItemID.FREMENNIK_BOOTS_ELITE                             // Fremennik sea boots 4
+		);
+
+		group("Kandarin headgear", "SEERS_HEADBAND",
+			ItemID.SEERS_HEADBAND_EASY,                              // Kandarin headgear 1
+			ItemID.SEERS_HEADBAND_MEDIUM,                            // Kandarin headgear 2
+			ItemID.SEERS_HEADBAND_HARD,                              // Kandarin headgear 3
+			ItemID.SEERS_HEADBAND_ELITE                              // Kandarin headgear 4
+		);
+
+		group("Karamja gloves", "ATJUN_GLOVES",
+			ItemID.ATJUN_GLOVES_EASY,                                // Karamja gloves 1
+			ItemID.ATJUN_GLOVES_MED,                                 // Karamja gloves 2
+			ItemID.ATJUN_GLOVES_HARD,                                // Karamja gloves 3
+			ItemID.ATJUN_GLOVES_ELITE                                // Karamja gloves 4
+		);
+
+		group("Morytania legs", "MORYTANIA_LEGS",
+			ItemID.MORYTANIA_LEGS_EASY,                              // Morytania legs 1
+			ItemID.MORYTANIA_LEGS_MEDIUM,                            // Morytania legs 2
+			ItemID.MORYTANIA_LEGS_HARD,                              // Morytania legs 3
+			ItemID.MORYTANIA_LEGS_ELITE                              // Morytania legs 4
+		);
+
+		group("Varrock armour", "VARROCK_ARMOUR",
+			ItemID.VARROCK_ARMOUR_EASY,                              // Varrock armour 1
+			ItemID.VARROCK_ARMOUR_MEDIUM,                            // Varrock armour 2
+			ItemID.VARROCK_ARMOUR_HARD,                              // Varrock armour 3
+			ItemID.VARROCK_ARMOUR_ELITE                              // Varrock armour 4
+		);
+
+		group("Western banner", "WESTERN_BANNER",
+			ItemID.WESTERN_BANNER_EASY,                              // Western banner 1
+			ItemID.WESTERN_BANNER_MEDIUM,                            // Western banner 2
+			ItemID.WESTERN_BANNER_HARD,                              // Western banner 3
+			ItemID.WESTERN_BANNER_ELITE                              // Western banner 4
+		);
+
+		group("Wilderness sword", "WILDERNESS_SWORD",
+			ItemID.WILDERNESS_SWORD_EASY,                            // Wilderness sword 1
+			ItemID.WILDERNESS_SWORD_MEDIUM,                          // Wilderness sword 2
+			ItemID.WILDERNESS_SWORD_HARD,                            // Wilderness sword 3
+			ItemID.WILDERNESS_SWORD_ELITE                            // Wilderness sword 4
+		);
+
+		group("Rada's blessing", "ZEAH_BLESSING",
+			ItemID.ZEAH_BLESSING_EASY,                               // Rada's blessing 1
+			ItemID.ZEAH_BLESSING_MEDIUM,                             // Rada's blessing 2
+			ItemID.ZEAH_BLESSING_HARD,                               // Rada's blessing 3
+			ItemID.ZEAH_BLESSING_ELITE                               // Rada's blessing 4
+		);
+
+		// ==================== CHOMPY BIRD HATS ====================
+
+		group("Chompy bird hat", "CBHAT",
+			ItemID.CBHAT1,                                           // Chompy bird hat
+			ItemID.CBHAT2,                                           // Chompy bird hat
+			ItemID.CBHAT3,                                           // Chompy bird hat
+			ItemID.CBHAT4,                                           // Chompy bird hat
+			ItemID.CBHAT5,                                           // Chompy bird hat
+			ItemID.CBHAT6,                                           // Chompy bird hat
+			ItemID.CBHAT7,                                           // Chompy bird hat
+			ItemID.CBHAT8,                                           // Chompy bird hat
+			ItemID.CBHAT9,                                           // Chompy bird hat
+			ItemID.CBHAT10,                                          // Chompy bird hat
+			ItemID.CBHAT11,                                          // Chompy bird hat
+			ItemID.CBHAT12,                                          // Chompy bird hat
+			ItemID.CBHAT13,                                          // Chompy bird hat
+			ItemID.CBHAT14,                                          // Chompy bird hat
+			ItemID.CBHAT15,                                          // Chompy bird hat
+			ItemID.CBHAT16,                                          // Chompy bird hat
+			ItemID.CBHAT17,                                          // Chompy bird hat
+			ItemID.CBHAT18                                           // Chompy bird hat
+		);
+
+		// ==================== IMBUED/SATURATED HEART ====================
+
+		group("Imbued heart", "ED_HEART",
+			ItemID.IMBUED_HEART,                                     // Imbued heart
+			ItemID.SATURATED_HEART                                   // Saturated heart
+		);
+
+		// ==================== STAFF OF THE DEAD VARIANTS ====================
+
+		group("Staff of the dead, Staff of light and Toxic staff of the dead", "SOTD|STAFF_OF_LIGHT",
+			ItemID.SOTD,                                             // Staff of the Dead
+			ItemID.STAFF_OF_LIGHT,                                   // Staff of Light
+			ItemID.TOXIC_SOTD_CHARGED                                // Toxic Staff of the Dead
+		);
+
+		// ==================== AMULET OF THE DAMNED ====================
+
+		group("Amulet of the Damned", "DAMNED_AMULET",
+			ItemID.DAMNED_AMULET,                                    // Amulet of the Damned (full)
+			ItemID.DAMNED_AMULET_DEGRADED                            // Amulet of the Damned
+		);
+
+		// ==================== SLAYER RINGS ====================
+
+		group("Slayer ring", "SLAYER_RING",
+			ItemID.SLAYER_RING_8,                                    // Slayer ring (8)
+			ItemID.SLAYER_RING_7,                                    // Slayer ring (7)
+			ItemID.SLAYER_RING_6,                                    // Slayer ring (6)
+			ItemID.SLAYER_RING_5,                                    // Slayer ring (5)
+			ItemID.SLAYER_RING_4,                                    // Slayer ring (4)
+			ItemID.SLAYER_RING_3,                                    // Slayer ring (3)
+			ItemID.SLAYER_RING_2,                                    // Slayer ring (2)
+			ItemID.SLAYER_RING_1                                     // Slayer ring (1)
+		);
+
+		// ==================== CRYSTAL EQUIPMENT (SONG OF THE ELVES) ====================
+
+		group("Crystal bow", "CRYSTAL_BOW",
+			ItemID.CRYSTAL_BOW,                                      // Crystal bow
+			ItemID.CRYSTAL_BOW_INACTIVE,                             // Crystal bow (inactive)
+			ItemID.CRYSTAL_BOW_2500                                  // Crystal bow
+		);
+
+		group("Crystal shield", "CRYSTAL_SHIELD",
+			ItemID.CRYSTAL_SHIELD,                                   // Crystal shield
+			ItemID.CRYSTAL_SHIELD_INACTIVE,                          // Crystal shield (inactive)
+			ItemID.CRYSTAL_SHIELD_2500                               // Crystal shield
+		);
+
+		group("Crystal halberd", "CRYSTAL_HALBERD",
+			ItemID.CRYSTAL_HALBERD,                                  // Crystal halberd
+			ItemID.CRYSTAL_HALBERD_INACTIVE,                         // Crystal halberd (inactive)
+			ItemID.CRYSTAL_HALBERD_2500                              // Crystal halberd
+		);
+
+		group("Blade of saeldor", "BLADE_OF_SAELDOR",
+			ItemID.BLADE_OF_SAELDOR,                                 // Blade of Saeldor
+			ItemID.BLADE_OF_SAELDOR_INACTIVE                         // Blade of Saeldor (inactive)
+		);
+
+		group("Bow of faerdhinen", "BOW_OF_FAERDHINEN",
+			ItemID.BOW_OF_FAERDHINEN_INACTIVE,                       // Bow of Faerdhinen (inactive)
+			ItemID.BOW_OF_FAERDHINEN                                 // Bow of Faerdhinen
+		);
+
+		// ==================== GAMES NECKLACE ====================
+
+		group("Games necklace", "NECKLACE_OF_MINIGAMES",
+			ItemID.NECKLACE_OF_MINIGAMES_8,                          // Games necklace(8)
+			ItemID.NECKLACE_OF_MINIGAMES_7,                          // Games necklace(7)
+			ItemID.NECKLACE_OF_MINIGAMES_6,                          // Games necklace(6)
+			ItemID.NECKLACE_OF_MINIGAMES_5,                          // Games necklace(5)
+			ItemID.NECKLACE_OF_MINIGAMES_4,                          // Games necklace(4)
+			ItemID.NECKLACE_OF_MINIGAMES_3,                          // Games necklace(3)
+			ItemID.NECKLACE_OF_MINIGAMES_2,                          // Games necklace(2)
+			ItemID.NECKLACE_OF_MINIGAMES_1                           // Games necklace(1)
+		);
+
+		// ==================== RING OF DUELING ====================
+
+		group("Ring of dueling", "RING_OF_DUELING",
+			ItemID.RING_OF_DUELING_8,                                // Ring of dueling(8)
+			ItemID.RING_OF_DUELING_7,                                // Ring of dueling(7)
+			ItemID.RING_OF_DUELING_6,                                // Ring of dueling(6)
+			ItemID.RING_OF_DUELING_5,                                // Ring of dueling(5)
+			ItemID.RING_OF_DUELING_4,                                // Ring of dueling(4)
+			ItemID.RING_OF_DUELING_3,                                // Ring of dueling(3)
+			ItemID.RING_OF_DUELING_2,                                // Ring of dueling(2)
+			ItemID.RING_OF_DUELING_1                                 // Ring of dueling(1)
+		);
+
+		// ==================== COMBAT BRACELET ====================
+
+		group("Combat bracelet", "JEWL_BRACELET_OF_COMBAT",
+			ItemID.JEWL_BRACELET_OF_COMBAT_4,                        // Combat bracelet(4)
+			ItemID.JEWL_BRACELET_OF_COMBAT_3,                        // Combat bracelet(3)
+			ItemID.JEWL_BRACELET_OF_COMBAT_2,                        // Combat bracelet(2)
+			ItemID.JEWL_BRACELET_OF_COMBAT_1,                        // Combat bracelet(1)
+			ItemID.JEWL_BRACELET_OF_COMBAT                           // Combat bracelet
+		);
+
+		// ==================== SKILLS NECKLACE ====================
+
+		group("Skills necklace", "JEWL_NECKLACE_OF_SKILLS",
+			ItemID.JEWL_NECKLACE_OF_SKILLS_4,                        // Skills necklace(4)
+			ItemID.JEWL_NECKLACE_OF_SKILLS_3,                        // Skills necklace(3)
+			ItemID.JEWL_NECKLACE_OF_SKILLS_2,                        // Skills necklace(2)
+			ItemID.JEWL_NECKLACE_OF_SKILLS_1,                        // Skills necklace(1)
+			ItemID.JEWL_NECKLACE_OF_SKILLS                           // Skills necklace
+		);
+
+		// ==================== DIGSITE PENDANT ====================
+
+		group("Digsite pendant", "NECKLACE_OF_DIGSITE",
+			ItemID.NECKLACE_OF_DIGSITE_1,                            // Digsite pendant (1)
+			ItemID.NECKLACE_OF_DIGSITE_2,                            // Digsite pendant (2)
+			ItemID.NECKLACE_OF_DIGSITE_3,                            // Digsite pendant (3)
+			ItemID.NECKLACE_OF_DIGSITE_4,                            // Digsite pendant (4)
+			ItemID.NECKLACE_OF_DIGSITE_5                             // Digsite pendant (5)
+		);
+
+		// ==================== NECKLACE OF PASSAGE ====================
+
+		group("Necklace of passage", "NECKLACE_OF_PASSAGE",
+			ItemID.NECKLACE_OF_PASSAGE_5,                            // Necklace of passage(5)
+			ItemID.NECKLACE_OF_PASSAGE_4,                            // Necklace of passage(4)
+			ItemID.NECKLACE_OF_PASSAGE_3,                            // Necklace of passage(3)
+			ItemID.NECKLACE_OF_PASSAGE_2,                            // Necklace of passage(2)
+			ItemID.NECKLACE_OF_PASSAGE_1                             // Necklace of passage(1)
+		);
+
+		// ==================== BURNING AMULET ====================
+
+		group("Burning amulet", "BURNING_AMULET",
+			ItemID.BURNING_AMULET_5,                                 // Burning amulet(5)
+			ItemID.BURNING_AMULET_4,                                 // Burning amulet(4)
+			ItemID.BURNING_AMULET_3,                                 // Burning amulet(3)
+			ItemID.BURNING_AMULET_2,                                 // Burning amulet(2)
+			ItemID.BURNING_AMULET_1                                  // Burning amulet(1)
+		);
+
+		// ==================== RING OF RETURNING ====================
+
+		group("Ring of returning", "RING_OF_RETURNING",
+			ItemID.RING_OF_RETURNING_5,                              // Ring of returning(5)
+			ItemID.RING_OF_RETURNING_4,                              // Ring of returning(4)
+			ItemID.RING_OF_RETURNING_3,                              // Ring of returning(3)
+			ItemID.RING_OF_RETURNING_2,                              // Ring of returning(2)
+			ItemID.RING_OF_RETURNING_1                               // Ring of returning(1)
+		);
+
+		// ==================== AMULET OF GLORY (T) ====================
+
+		group("Amulet of glory", "TRAIL_AMULET_OF_GLORY",
+			ItemID.TRAIL_AMULET_OF_GLORY_4,                          // Amulet of glory (t4)
+			ItemID.TRAIL_AMULET_OF_GLORY_3,                          // Amulet of glory (t3)
+			ItemID.TRAIL_AMULET_OF_GLORY_2,                          // Amulet of glory (t2)
+			ItemID.TRAIL_AMULET_OF_GLORY_1,                          // Amulet of glory (t1)
+			ItemID.TRAIL_AMULET_OF_GLORY,                            // Amulet of glory (t)
+			ItemID.TRAIL_AMULET_OF_GLORY_6,                          // Amulet of glory (t6)
+			ItemID.TRAIL_AMULET_OF_GLORY_5                           // Amulet of glory (t5)
+		);
+
+		// ==================== TELEPORT JEWELLERY - MISC ====================
+
+		group("Enchanted lyre", "STRUNG_LYRE",
+			ItemID.VIKING_ENCHANTED_STRUNG_LYRE,                     // Enchanted lyre
+			ItemID.MAGIC_STRUNG_LYRE_2,                              // Enchanted lyre(2)
+			ItemID.MAGIC_STRUNG_LYRE_3,                              // Enchanted lyre(3)
+			ItemID.MAGIC_STRUNG_LYRE_4                               // Enchanted lyre(4)
+		);
+
+		group("Skull sceptre", "SOS_SKULL_SCEPTRE",
+			ItemID.SOS_SKULL_SCEPTRE,                                // Skull sceptre
+			ItemID.SOS_SKULL_SCEPTRE_IMBUED                          // Skull sceptre (i)
+		);
+
+		// ==================== BLIGHTED SUPPLIES ====================
+
+		group("Blighted anglerfish", "ANGLERFISH",
+			ItemID.BLIGHTED_ANGLERFISH,                              // Blighted anglerfish
+			ItemID.ANGLERFISH                                        // Anglerfish
+		);
+
+		group("Blighted karambwan", "ED_KARAMBWAN",
+			ItemID.BLIGHTED_KARAMBWAN,                               // Blighted karambwan
+			ItemID.TBWT_COOKED_KARAMBWAN                             // Cooked karambwan
+		);
+
+		group("Blighted manta ray", "MANTARAY",
+			ItemID.BLIGHTED_MANTARAY,                                // Blighted manta ray
+			ItemID.MANTARAY                                          // Manta ray
+		);
+
+		// ==================== ZAMORAKIAN HASTA/SPEAR ====================
+
+		group("Zamorakian spear", "ZAMORAK",
+			ItemID.ZAMORAK_SPEAR,                                    // Zamorakian spear
+			ItemID.ZAMORAK_HASTA                                     // Zamorakian hasta
+		);
+
+		// ==================== BRYOPHYTA'S STAFF ====================
+
+		group("Bryophyta's staff", "NATURE_STAFF",
+			ItemID.NATURE_STAFF_CHARGED,                             // Bryophyta's staff
+			ItemID.NATURE_STAFF_UNCHARGED                            // Bryophyta's staff (uncharged)
+		);
+
+		// ==================== BLUE MOON ITEMS ====================
+
+		group("Blue Moon helm", "FROST_MOON_HELM",
+			ItemID.FROST_MOON_HELM,                                  // Blue Moon helm
+			ItemID.FROST_MOON_HELM_DEGRADED                          // Blue Moon helm
+		);
+
+		group("Blue Moon chestplate", "FROST_MOON_CHESTPLATE",
+			ItemID.FROST_MOON_CHESTPLATE,                            // Blue Moon chestplate
+			ItemID.FROST_MOON_CHESTPLATE_DEGRADED                    // Blue Moon chestplate
+		);
+
+		group("Blue Moon tassets", "FROST_MOON_TASSETS",
+			ItemID.FROST_MOON_TASSETS,                               // Blue Moon tassets
+			ItemID.FROST_MOON_TASSETS_DEGRADED                       // Blue Moon tassets
+		);
+
+		// ==================== BLOOD MOON ITEMS ====================
+
+		group("Blood Moon helm", "BLOOD_MOON_HELM",
+			ItemID.BLOOD_MOON_HELM,                                  // Blood Moon helm
+			ItemID.BLOOD_MOON_HELM_DEGRADED                          // Blood Moon helm
+		);
+
+		group("Blood Moon chestplate", "BLOOD_MOON_CHESTPLATE",
+			ItemID.BLOOD_MOON_CHESTPLATE,                            // Blood Moon chestplate
+			ItemID.BLOOD_MOON_CHESTPLATE_DEGRADED                    // Blood Moon chestplate
+		);
+
+		group("Blood Moon tassets", "BLOOD_MOON_TASSETS",
+			ItemID.BLOOD_MOON_TASSETS,                               // Blood Moon tassets
+			ItemID.BLOOD_MOON_TASSETS_DEGRADED                       // Blood Moon tassets
+		);
+
+		// ==================== ECLIPSE MOON ITEMS ====================
+
+		group("Eclipse Moon helm", "ECLIPSE_MOON_HELM",
+			ItemID.ECLIPSE_MOON_HELM,                                // Eclipse Moon helm
+			ItemID.ECLIPSE_MOON_HELM_DEGRADED                        // Eclipse Moon helm
+		);
+
+		group("Eclipse Moon chestplate", "ECLIPSE_MOON_CHESTPLATE",
+			ItemID.ECLIPSE_MOON_CHESTPLATE,                          // Eclipse Moon chestplate
+			ItemID.ECLIPSE_MOON_CHESTPLATE_DEGRADED                  // Eclipse Moon chestplate
+		);
+
+		group("Eclipse Moon tassets", "ECLIPSE_MOON_TASSETS",
+			ItemID.ECLIPSE_MOON_TASSETS,                             // Eclipse Moon tassets
+			ItemID.ECLIPSE_MOON_TASSETS_DEGRADED                     // Eclipse Moon tassets
+		);
+
+		// ==================== TONALZTICS OF RALOS ====================
+
+		group("Tonalztics of Ralos", "TONALZTICS_OF_RALOS",
+			ItemID.TONALZTICS_OF_RALOS_CHARGED,                      // Tonalztics of Ralos
+			ItemID.TONALZTICS_OF_RALOS_UNCHARGED                     // Tonalztics of Ralos (uncharged)
+		);
+
+		// ==================== KERIS PARTISAN ====================
+
+		group("Keris partisan", "KERIS_PARTISAN",
+			ItemID.KERIS_PARTISAN,                                   // Keris partisan
+			ItemID.KERIS_PARTISAN_BREACH,                            // Keris partisan of breaching
+			ItemID.KERIS_PARTISAN_SUN                                // Keris partisan of the sun
+		);
+
+		// ==================== BOW OF FAERDHINEN (C) ====================
+
+		group("Bow of Faerdhinen (c)", "BOW_OF_FAERDHINEN_INFINITE",
+			ItemID.BOW_OF_FAERDHINEN_INFINITE,                       // Bow of Faerdhinen (c)
+			ItemID.BOW_OF_FAERDHINEN_INFINITE_ITHELL,                // Bow of Faerdhinen (c)
+			ItemID.BOW_OF_FAERDHINEN_INFINITE_IORWERTH,              // Bow of Faerdhinen (c)
+			ItemID.BOW_OF_FAERDHINEN_INFINITE_TRAHAEARN,             // Bow of Faerdhinen (c)
+			ItemID.BOW_OF_FAERDHINEN_INFINITE_CADARN,                // Bow of Faerdhinen (c)
+			ItemID.BOW_OF_FAERDHINEN_INFINITE_CRWYS                  // Bow of Faerdhinen (c)
+		);
+
+		// ==================== BLADE OF SAELDOR (C) ====================
+
+		group("Blade of Saeldor (c)", "BLADE_OF_SAELDOR_INFINITE",
+			ItemID.BLADE_OF_SAELDOR_INFINITE_ITHELL,                 // Blade of Saeldor (c)
+			ItemID.BLADE_OF_SAELDOR_INFINITE_IORWERTH,               // Blade of Saeldor (c)
+			ItemID.BLADE_OF_SAELDOR_INFINITE_TRAHAEARN,              // Blade of Saeldor (c)
+			ItemID.BLADE_OF_SAELDOR_INFINITE_CADARN,                 // Blade of Saeldor (c)
+			ItemID.BLADE_OF_SAELDOR_INFINITE_CRWYS,                  // Blade of Saeldor (c)
+			ItemID.BLADE_OF_SAELDOR_INFINITE_MEILYR                  // Blade of Saeldor (c)
+		);
+
+		// ==================== NIGHTMARE STAFF ====================
+
+		group("Nightmare staff", "NIGHTMARE_STAFF",
+			ItemID.NIGHTMARE_STAFF,                                  // Nightmare staff
+			ItemID.NIGHTMARE_STAFF_VOLATILE,                         // Volatile Nightmare staff
+			ItemID.NIGHTMARE_STAFF_ELDRITCH,                         // Eldritch Nightmare staff
+			ItemID.NIGHTMARE_STAFF_HARMONISED                        // Harmonised Nightmare staff
+		);
+
+		// ==================== BANDOS ====================
+
+		group("Bandos chestplate", "BANDOS_CHESTPLATE",
+			ItemID.BANDOS_CHESTPLATE,                                // Bandos chestplate
+			ItemID.BANDOS_CHESTPLATE_ORNAMENT                        // Bandos chestplate (or)
+		);
+
+		group("Bandos tassets", "BANDOS_SKIRT",
+			ItemID.BANDOS_SKIRT,                                     // Bandos tassets
+			ItemID.BANDOS_SKIRT_ORNAMENT                             // Bandos tassets (or)
+		);
+
+		group("Bandos boots", "BANDOS_BOOTS",
+			ItemID.BANDOS_BOOTS,                                     // Bandos boots
+			ItemID.BANDOS_BOOTS_ORNAMENT                             // Bandos boots (or)
+		);
+
+		// ==================== ARMADYL ====================
+
+		group("Armadyl helmet", "ARMADYL_HELMET",
+			ItemID.ARMADYL_HELMET,                                   // Armadyl helmet
+			ItemID.ARMADYL_HELMET_ORNAMENT                           // Armadyl helmet (or)
+		);
+
+		group("Armadyl chestplate", "ARMADYL_CHESTPLATE",
+			ItemID.ARMADYL_CHESTPLATE,                               // Armadyl chestplate
+			ItemID.ARMADYL_CHESTPLATE_ORNAMENT                       // Armadyl chestplate (or)
+		);
+
+		group("Armadyl chainskirt", "ARMADYL_SKIRT",
+			ItemID.ARMADYL_SKIRT,                                    // Armadyl chainskirt
+			ItemID.ARMADYL_SKIRT_ORNAMENT                            // Armadyl chainskirt (or)
+		);
+
+		// ==================== SPIRIT SHIELDS ====================
+
+		group("Elysian spirit shield", "ELYSIAN",
+			ItemID.ELYSIAN,                                          // Elysian spirit shield
+			ItemID.MM2_CRUSHED_ELYSIAN                               // Elysian spirit shield
+		);
+
+		// ==================== VIRTUS ROBES ====================
+
+		group("Virtus mask", "VIRTUS_MASK",
+			ItemID.VIRTUS_MASK,                                      // Virtus mask
+			ItemID.VIRTUS_MASK_ORNAMENT                              // Echo virtus mask
+		);
+
+		group("Virtus robe top", "VIRTUS_TOP",
+			ItemID.VIRTUS_TOP,                                       // Virtus robe top
+			ItemID.VIRTUS_TOP_ORNAMENT                               // Echo virtus robe top
+		);
+
+		group("Virtus robe bottom", "VIRTUS_LEGS",
+			ItemID.VIRTUS_LEGS,                                      // Virtus robe bottom
+			ItemID.VIRTUS_LEGS_ORNAMENT                              // Echo virtus robe bottom
+		);
+
+		// ==================== DRAGONFIRE SHIELDS ====================
+
+		group("Dragonfire shield", "DRAGONFIRE_SHIELD",
+			ItemID.DRAGONFIRE_SHIELD,                                // Dragonfire shield
+			ItemID.DRAGONFIRE_SHIELD_UNCHARGED                       // Dragonfire shield
+		);
+
+		group("Dragonfire ward", "DRAGONFIRE_WARD",
+			ItemID.DRAGONFIRE_WARD,                                  // Dragonfire ward
+			ItemID.DRAGONFIRE_WARD_UNCHARGED                         // Dragonfire ward
+		);
+
+		group("Ancient wyvern shield", "WYVERN_SHIELD",
+			ItemID.WYVERN_SHIELD,                                    // Ancient wyvern shield
+			ItemID.WYVERN_SHIELD_UNCHARGED                           // Ancient wyvern shield
+		);
+
+		// ==================== TOME OF FIRE ====================
+
+		group("Tome of Fire", "TOME_OF_FIRE",
+			ItemID.TOME_OF_FIRE,                                     // Tome of Fire
+			ItemID.TOME_OF_FIRE_UNCHARGED                            // Tome of Fire (empty)
+		);
+
+		// ==================== TOME OF WATER ====================
+
+		group("Tome of Water", "TOME_OF_WATER",
+			ItemID.TOME_OF_WATER,                                    // Tome of Water
+			ItemID.TOME_OF_WATER_UNCHARGED                           // Tome of Water (empty)
+		);
+
+		// ==================== BONECRUSHER ====================
+
+		group("Bonecrusher", "BONECRUSHER",
+			ItemID.BONECRUSHER,                                      // Bonecrusher
+			ItemID.BONECRUSHER_NECKLACE                              // Bonecrusher necklace
+		);
+
+		// ==================== COAL BAG ====================
+
+		group("Coal bag", "COAL_BAG",
+			ItemID.COAL_BAG,                                         // Coal bag
+			ItemID.COAL_BAG_OPEN                                     // Open coal bag
+		);
+
+		// ==================== GEM BAG ====================
+
+		group("Gem bag", "GEM_BAG",
+			ItemID.GEM_BAG,                                          // Gem bag
+			ItemID.GEM_BAG_OPEN                                      // Open gem bag
+		);
+
+		// ==================== HERB SACK ====================
+
+		group("Herb sack", "SLAYER_HERB_SACK",
+			ItemID.SLAYER_HERB_SACK,                                 // Herb sack
+			ItemID.SLAYER_HERB_SACK_OPEN                             // Open herb sack
+		);
+
+		// ==================== FISH BARREL ====================
+
+		group("Fish barrel", "FISH_BARREL",
+			ItemID.FISH_BARREL_CLOSED,                               // Fish barrel
+			ItemID.FISH_BARREL_OPEN                                  // Open fish barrel
+		);
+
+		// ==================== MISCELLANIA/ETCETERIA ====================
+
+		group("Ring of Charos", "RING_OF_CHAROS",
+			ItemID.RING_OF_CHAROS,                                   // Ring of Charos
+			ItemID.RING_OF_CHAROS_UNLOCKED                           // Ring of Charos(a)
+		);
+
+		// ==================== PET MORPHS (Snakeling) ====================
+
+		group("Pet Snakeling", "SNAKEPET",
+			ItemID.SNAKEPET,                                         // Pet Snakeling
+			ItemID.SNAKEPET_ORANGE,                                  // Pet Snakeling
+			ItemID.SNAKEPET_BLUE                                     // Pet Snakeling
+		);
+
+		// ==================== LEAGUES - CANES AND BANNERS ====================
+
+		group("Leagues Banners", "BANNER",
+			ItemID.TWISTED_BANNER,                                   // Twisted banner
+			ItemID.TRAILBLAZER_BANNER,                               // Trailblazer banner
+			ItemID.LEAGUE_3_BANNER,                                  // Shattered banner
+			ItemID.LEAGUE_4_BANNER,                                  // Trailblazer reloaded banner
+			ItemID.LEAGUE_5_BANNER                                   // Raging echoes banner
 		);
 
 		// ==================== GILDED ARMOUR ====================
 
-		addVariantGroup(
-			3481,   // Gilded full helm
-			1163    // Rune full helm
+		group("Gilded med helm", "RUNE_MED_HELM",
+			ItemID.RUNE_MED_HELM_GOLD,                               // Gilded med helm
+			ItemID.RUNE_MED_HELM                                     // Rune med helm
 		);
 
-		addVariantGroup(
-			3483,   // Gilded platebody
-			1127    // Rune platebody
+		group("Gilded chainbody", "RUNE_CHAINBODY",
+			ItemID.RUNE_CHAINBODY_GOLD,                              // Gilded chainbody
+			ItemID.RUNE_CHAINBODY                                    // Rune chainbody
 		);
 
-		addVariantGroup(
-			3485,   // Gilded platelegs
-			1079    // Rune platelegs
+		group("Gilded sq shield", "RUNE_SQ_SHIELD",
+			ItemID.RUNE_SQ_SHIELD_GOLD,                              // Gilded sq shield
+			ItemID.RUNE_SQ_SHIELD                                    // Rune sq shield
 		);
 
-		addVariantGroup(
-			3488,   // Gilded plateskirt
-			1093    // Rune plateskirt
+		group("Gilded 2h sword", "RUNE_2H_SWORD",
+			ItemID.RUNE_2H_SWORD_GOLD,                               // Gilded 2h sword
+			ItemID.RUNE_2H_SWORD                                     // Rune 2h sword
 		);
 
-		addVariantGroup(
-			3486,   // Gilded kiteshield
-			1201    // Rune kiteshield
-		);
-
-		addVariantGroup(
-			12153,  // Gilded med helm
-			1147    // Rune med helm
-		);
-
-		addVariantGroup(
-			12155,  // Gilded chainbody
-			1113    // Rune chainbody
-		);
-
-		addVariantGroup(
-			12157,  // Gilded sq shield
-			1185    // Rune sq shield
-		);
-
-		addVariantGroup(
-			20146,  // Gilded 2h sword
-			1319    // Rune 2h sword
-		);
-
-		addVariantGroup(
-			23279,  // Gilded axe
-			6739    // Dragon axe
-		);
-
-		addVariantGroup(
-			23276,  // Gilded pickaxe
-			11920   // Dragon pickaxe
-		);
-
-		addVariantGroup(
-			23282,  // Gilded spade
-			952     // Spade
-		);
-
-		// ==================== 3RD AGE EQUIPMENT ====================
-
-		// 3rd age melee
-		addVariantGroup(
-			10350,  // 3rd age full helmet
-			10348,  // 3rd age platebody
-			10346,  // 3rd age platelegs
-			10352   // 3rd age kiteshield
-		);
-
-		// 3rd age range
-		addVariantGroup(
-			10334,  // 3rd age range coif
-			10330,  // 3rd age range top
-			10332,  // 3rd age range legs
-			10336   // 3rd age vambraces
-		);
-
-		// 3rd age mage
-		addVariantGroup(
-			10342,  // 3rd age mage hat
-			10338,  // 3rd age robe top
-			10340,  // 3rd age robe
-			10344   // 3rd age amulet
-		);
-
-		// 3rd age weapons
-		addVariantGroup(
-			12426,  // 3rd age longsword
-			12422,  // 3rd age wand
-			12424,  // 3rd age bow
-			12428   // 3rd age cloak
-		);
-
-		// 3rd age druidic
-		addVariantGroup(
-			23345,  // 3rd age druidic robe top
-			23348,  // 3rd age druidic robe bottom
-			23351,  // 3rd age druidic staff
-			23354   // 3rd age druidic cloak
-		);
-
-		// 3rd age tools
-		addVariantGroup(
-			20011,  // 3rd age pickaxe
-			20014,  // 3rd age axe
-			23360   // 3rd age ring
+		group("Gilded spade", "SPADE",
+			ItemID.TRAIL_GILDED_SPADE,                               // Gilded spade
+			ItemID.SPADE                                             // Spade
 		);
 
 		// ==================== HERALDIC ARMOUR (H1-H5) ====================
 
-		// Black heraldic
-		addVariantGroup(
-			7332,   // Black helm (h1)
-			7338,   // Black helm (h2)
-			7344,   // Black helm (h3)
-			7350,   // Black helm (h4)
-			7356    // Black helm (h5)
+		group("Black heraldic", "TRAIL_HERALDIC_HELM",
+			ItemID.TRAIL_HERALDIC_HELM_1_BLACK,                      // Black helm (h1)
+			ItemID.TRAIL_HERALDIC_HELM_2_BLACK,                      // Black helm (h2)
+			ItemID.TRAIL_HERALDIC_HELM_3_BLACK,                      // Black helm (h3)
+			ItemID.TRAIL_HERALDIC_HELM_4_BLACK,                      // Black helm (h4)
+			ItemID.TRAIL_HERALDIC_HELM_5_BLACK                       // Black helm (h5)
 		);
 
-		addVariantGroup(
-			7334,   // Black body (h1)
-			7340,   // Black body (h2)
-			7346,   // Black body (h3)
-			7352,   // Black body (h4)
-			7358    // Black body (h5)
+		group("Black shield", "BLACK_HERALDIC_KITESHIELD",
+			ItemID.BLACK_HERALDIC_KITESHIELD1,                       // Black shield (h1)
+			ItemID.BLACK_HERALDIC_KITESHIELD2,                       // Black shield (h2)
+			ItemID.BLACK_HERALDIC_KITESHIELD3,                       // Black shield (h3)
+			ItemID.BLACK_HERALDIC_KITESHIELD4,                       // Black shield (h4)
+			ItemID.BLACK_HERALDIC_KITESHIELD5                        // Black shield (h5)
 		);
 
-		addVariantGroup(
-			7336,   // Black shield (h1)
-			7342,   // Black shield (h2)
-			7348,   // Black shield (h3)
-			7354,   // Black shield (h4)
-			7360    // Black shield (h5)
+		group("Adamant heraldic", "TRAIL_HERALDIC_HELM",
+			ItemID.TRAIL_HERALDIC_HELM_1_ADAMANT,                    // Adamant helm (h1)
+			ItemID.TRAIL_HERALDIC_HELM_2_ADAMANT,                    // Adamant helm (h2)
+			ItemID.TRAIL_HERALDIC_HELM_3_ADAMANT,                    // Adamant helm (h3)
+			ItemID.TRAIL_HERALDIC_HELM_4_ADAMANT,                    // Adamant helm (h4)
+			ItemID.TRAIL_HERALDIC_HELM_5_ADAMANT                     // Adamant helm (h5)
 		);
 
-		// Adamant heraldic
-		addVariantGroup(
-			7362,   // Adamant helm (h1)
-			7368,   // Adamant helm (h2)
-			7374,   // Adamant helm (h3)
-			7380,   // Adamant helm (h4)
-			7386    // Adamant helm (h5)
+		group("Adamant shield", "ADAMANT_HERALDIC_KITESHIELD",
+			ItemID.ADAMANT_HERALDIC_KITESHIELD1,                     // Adamant shield (h1)
+			ItemID.ADAMANT_HERALDIC_KITESHIELD2,                     // Adamant shield (h2)
+			ItemID.ADAMANT_HERALDIC_KITESHIELD3,                     // Adamant shield (h3)
+			ItemID.ADAMANT_HERALDIC_KITESHIELD4,                     // Adamant shield (h4)
+			ItemID.ADAMANT_HERALDIC_KITESHIELD5                      // Adamant shield (h5)
 		);
 
-		addVariantGroup(
-			7364,   // Adamant body (h1)
-			7370,   // Adamant body (h2)
-			7376,   // Adamant body (h3)
-			7382,   // Adamant body (h4)
-			7388    // Adamant body (h5)
+		group("Rune heraldic", "TRAIL_HERALDIC_HELM",
+			ItemID.TRAIL_HERALDIC_HELM_1_RUNE,                       // Rune helm (h1)
+			ItemID.TRAIL_HERALDIC_HELM_2_RUNE,                       // Rune helm (h2)
+			ItemID.TRAIL_HERALDIC_HELM_3_RUNE,                       // Rune helm (h3)
+			ItemID.TRAIL_HERALDIC_HELM_4_RUNE,                       // Rune helm (h4)
+			ItemID.TRAIL_HERALDIC_HELM_5_RUNE                        // Rune helm (h5)
 		);
 
-		addVariantGroup(
-			7366,   // Adamant shield (h1)
-			7372,   // Adamant shield (h2)
-			7378,   // Adamant shield (h3)
-			7384,   // Adamant shield (h4)
-			7390    // Adamant shield (h5)
-		);
-
-		// Rune heraldic
-		addVariantGroup(
-			7392,   // Rune helm (h1)
-			7398,   // Rune helm (h2)
-			7404,   // Rune helm (h3)
-			7410,   // Rune helm (h4)
-			7416    // Rune helm (h5)
-		);
-
-		addVariantGroup(
-			7394,   // Rune body (h1)
-			7400,   // Rune body (h2)
-			7406,   // Rune body (h3)
-			7412,   // Rune body (h4)
-			7418    // Rune body (h5)
-		);
-
-		addVariantGroup(
-			7396,   // Rune shield (h1)
-			7402,   // Rune shield (h2)
-			7408,   // Rune shield (h3)
-			7414,   // Rune shield (h4)
-			7420    // Rune shield (h5)
+		group("Rune shield", "RUNE_HERALDIC_KITESHIELD",
+			ItemID.RUNE_HERALDIC_KITESHIELD1,                        // Rune shield (h1)
+			ItemID.RUNE_HERALDIC_KITESHIELD2,                        // Rune shield (h2)
+			ItemID.RUNE_HERALDIC_KITESHIELD3,                        // Rune shield (h3)
+			ItemID.RUNE_HERALDIC_KITESHIELD4,                        // Rune shield (h4)
+			ItemID.RUNE_HERALDIC_KITESHIELD5                         // Rune shield (h5)
 		);
 
 		// ==================== DRAGONHIDE TRIMMED/BLESSED ====================
 
-		// Green d'hide trimmed
-		addVariantGroup(
-			7370,   // Green d'hide body (t)
-			7372,   // Green d'hide body (g)
-			1135    // Green d'hide body
+		group("Green d'hide trimmed", "DRAGONHIDE_BODY",
+			ItemID.DRAGONHIDE_BODY_TRIM_GOLD,                        // Green d'hide body (g)
+			ItemID.DRAGONHIDE_BODY_TRIM,                             // Green d'hide body (t)
+			ItemID.DRAGONHIDE_BODY                                   // Green d'hide body
 		);
 
-		addVariantGroup(
-			7378,   // Green d'hide chaps (t)
-			7380,   // Green d'hide chaps (g)
-			1099    // Green d'hide chaps
+		group("Green d'hide chaps", "DRAGONHIDE_CHAPS",
+			ItemID.DRAGONHIDE_CHAPS_TRIM_GOLD,                       // Green d'hide chaps (g)
+			ItemID.DRAGONHIDE_CHAPS_TRIM,                            // Green d'hide chaps (t)
+			ItemID.DRAGONHIDE_CHAPS                                  // Green d'hide chaps
 		);
 
-		// Blue d'hide trimmed
-		addVariantGroup(
-			7374,   // Blue d'hide body (t)
-			7376,   // Blue d'hide body (g)
-			2499    // Blue d'hide body
+		group("Blue d'hide trimmed", "BLUE_DRAGONHIDE_BODY",
+			ItemID.BLUE_DRAGONHIDE_BODY_TRIM_GOLD,                   // Blue d'hide body (g)
+			ItemID.BLUE_DRAGONHIDE_BODY_TRIM,                        // Blue d'hide body (t)
+			ItemID.BLUE_DRAGONHIDE_BODY                              // Blue d'hide body
 		);
 
-		addVariantGroup(
-			7382,   // Blue d'hide chaps (t)
-			7384,   // Blue d'hide chaps (g)
-			2493    // Blue d'hide chaps
+		group("Blue d'hide chaps", "BLUE_DRAGONHIDE_CHAPS",
+			ItemID.BLUE_DRAGONHIDE_CHAPS_TRIM_GOLD,                  // Blue d'hide chaps (g)
+			ItemID.BLUE_DRAGONHIDE_CHAPS_TRIM,                       // Blue d'hide chaps (t)
+			ItemID.BLUE_DRAGONHIDE_CHAPS                             // Blue d'hide chaps
 		);
 
-		// Red d'hide trimmed
-		addVariantGroup(
-			2501,   // Red d'hide body (t)
-			2503,   // Red d'hide body (g)
-			2501    // Red d'hide body
+		group("Red d'hide trimmed", "RED_DRAGONHIDE_BODY",
+			ItemID.RED_DRAGONHIDE_BODY,                              // Red d'hide body
+			ItemID.RED_DRAGONHIDE_BODY_GOLD                          // Red d'hide body (g)
 		);
 
-		// Black d'hide trimmed
-		addVariantGroup(
-			12381,  // Black d'hide body (t)
-			12383,  // Black d'hide body (g)
-			2503    // Black d'hide body
+		group("Black d'hide trimmed", "BLACK_DRAGONHIDE_BODY",
+			ItemID.BLACK_DRAGONHIDE_BODY_GOLD,                       // Black d'hide body (g)
+			ItemID.BLACK_DRAGONHIDE_BODY                             // Black d'hide body
 		);
 
-		addVariantGroup(
-			12385,  // Black d'hide chaps (t)
-			12387,  // Black d'hide chaps (g)
-			2497    // Black d'hide chaps
-		);
-
-		// ==================== BLESSED DRAGONHIDE ====================
-
-		// Saradomin blessed d'hide
-		addVariantGroup(
-			10386,  // Saradomin coif
-			10388,  // Saradomin d'hide body
-			10390,  // Saradomin chaps
-			10392,  // Saradomin bracers
-			23195   // Saradomin d'hide boots
-		);
-
-		// Zamorak blessed d'hide
-		addVariantGroup(
-			10374,  // Zamorak coif
-			10376,  // Zamorak d'hide body
-			10378,  // Zamorak chaps
-			10380,  // Zamorak bracers
-			23192   // Zamorak d'hide boots
-		);
-
-		// Guthix blessed d'hide
-		addVariantGroup(
-			10382,  // Guthix coif
-			10370,  // Guthix d'hide body
-			10372,  // Guthix chaps
-			10384,  // Guthix bracers
-			23198   // Guthix d'hide boots
-		);
-
-		// Armadyl blessed d'hide
-		addVariantGroup(
-			12512,  // Armadyl coif
-			12508,  // Armadyl d'hide body
-			12510,  // Armadyl chaps
-			12514,  // Armadyl bracers
-			23201   // Armadyl d'hide boots
-		);
-
-		// Ancient blessed d'hide
-		addVariantGroup(
-			12494,  // Ancient coif
-			12490,  // Ancient d'hide body
-			12492,  // Ancient chaps
-			12496,  // Ancient bracers
-			23204   // Ancient d'hide boots
-		);
-
-		// Bandos blessed d'hide
-		addVariantGroup(
-			12500,  // Bandos coif
-			12502,  // Bandos d'hide body
-			12504,  // Bandos chaps
-			12506,  // Bandos bracers
-			23207   // Bandos d'hide boots
+		group("Black d'hide chaps", "BLACK_DRAGONHIDE_CHAPS",
+			ItemID.BLACK_DRAGONHIDE_CHAPS_TRIM,                      // Black d'hide chaps (t)
+			ItemID.BLACK_DRAGONHIDE_CHAPS                            // Black d'hide chaps
 		);
 
 		// ==================== HOLIDAY EVENT ITEMS ====================
 
-		// Partyhats
-		addVariantGroup(
-			1038,   // Red partyhat
-			1040,   // Yellow partyhat
-			1042,   // Blue partyhat
-			1044,   // Green partyhat
-			1046,   // Purple partyhat
-			1048,   // White partyhat
-			13173,  // Rainbow partyhat
-			13175,  // Black partyhat
-			28614   // Silver partyhat
+		group("Partyhats", "PARTYHAT",
+			ItemID.RED_PARTYHAT,                                     // Red partyhat
+			ItemID.YELLOW_PARTYHAT,                                  // Yellow partyhat
+			ItemID.BLUE_PARTYHAT,                                    // Blue partyhat
+			ItemID.GREEN_PARTYHAT,                                   // Green partyhat
+			ItemID.PURPLE_PARTYHAT,                                  // Purple partyhat
+			ItemID.WHITE_PARTYHAT,                                   // White partyhat
+			ItemID.BLACK_PARTYHAT,                                   // Black partyhat
+			ItemID.OSB10_SILVER_PARTYHAT                             // Silver partyhat
 		);
 
-		// Halloween masks
-		addVariantGroup(
-			1053,   // Green h'ween mask
-			1055,   // Blue h'ween mask
-			1057,   // Red h'ween mask
-			11847   // Black h'ween mask
-		);
-
-		// Santa hats
-		addVariantGroup(
-			1050,   // Santa hat
-			12887,  // Inverted santa hat
-			12888   // Black santa hat
+		group("Santa hats", "SANTA_HAT",
+			ItemID.SANTA_HAT,                                        // Santa hat
+			ItemID.INVERTED_SANTA_HAT,                               // Inverted santa hat
+			ItemID.BLACK_SANTA_HAT                                   // Black santa hat
 		);
 
 		// ==================== STUDDED LEATHER (TRIMMED) ====================
 
-		addVariantGroup(
-			7362,   // Studded body (t)
-			7364,   // Studded body (g)
-			1133    // Studded body
+		group("Studded body", "STUDDED_BODY",
+			ItemID.STUDDED_BODY_TRIM_GOLD,                           // Studded body (g)
+			ItemID.STUDDED_BODY_TRIM_FUR,                            // Studded body (t)
+			ItemID.STUDDED_BODY                                      // Studded body
 		);
 
-		addVariantGroup(
-			7366,   // Studded chaps (t)
-			7368,   // Studded chaps (g)
-			1097    // Studded chaps
+		group("Studded chaps", "STUDDED_CHAPS",
+			ItemID.STUDDED_CHAPS_TRIM_GOLD,                          // Studded chaps (g)
+			ItemID.STUDDED_CHAPS_TRIM_FUR,                           // Studded chaps (t)
+			ItemID.STUDDED_CHAPS                                     // Studded chaps
 		);
 
 		// ==================== WIZARD ROBES (TRIMMED) ====================
 
-		// Blue wizard trimmed
-		addVariantGroup(
-			7386,   // Blue wizard hat (t)
-			7388,   // Blue wizard hat (g)
-			579     // Blue wizard hat
+		group("Blue wizard trimmed", "BLUEWIZHAT",
+			ItemID.BLUEWIZHAT_TRIM,                                  // Blue wizard hat (t)
+			ItemID.BLUEWIZHAT_TRIM_GOLD,                             // Blue wizard hat (g)
+			ItemID.BLUEWIZHAT                                        // Blue wizard hat
 		);
 
-		addVariantGroup(
-			7390,   // Blue wizard robe (t)
-			7392,   // Blue wizard robe (g)
-			577     // Blue wizard robe
+		group("Blue wizard robe", "WIZARDS_ROBE",
+			ItemID.WIZARDS_ROBE_TRIM_GOLD,                           // Blue wizard robe (g)
+			ItemID.WIZARDS_ROBE_TRIM,                                // Blue wizard robe (t)
+			ItemID.WIZARDS_ROBE                                      // Blue wizard robe
 		);
 
-		// Black wizard trimmed
-		addVariantGroup(
-			7394,   // Black wizard hat (t)
-			7396,   // Black wizard hat (g)
-			1011    // Black wizard hat
+		group("Black wizard hat", "BLACKWIZHAT",
+			ItemID.BLACKWIZHAT,                                      // Wizard hat
+			ItemID.BLACKWIZHAT_TRIM,                                 // Black wizard hat (t)
+			ItemID.BLACKWIZHAT_GOLD                                  // Black wizard hat (g)
 		);
 
-		addVariantGroup(
-			7398,   // Black wizard robe (t)
-			7400,   // Black wizard robe (g)
-			1015    // Black robe
-		);
-
-		// ==================== ELEGANT CLOTHING ====================
-
-		// Blue elegant
-		addVariantGroup(
-			10400,  // Blue elegant shirt
-			10402,  // Blue elegant legs
-			10420   // Blue elegant skirt
-		);
-
-		// Red elegant
-		addVariantGroup(
-			10404,  // Red elegant shirt
-			10406,  // Red elegant legs
-			10422   // Red elegant skirt
-		);
-
-		// Green elegant
-		addVariantGroup(
-			10408,  // Green elegant shirt
-			10410,  // Green elegant legs
-			10424   // Green elegant skirt
-		);
-
-		// Black elegant
-		addVariantGroup(
-			10412,  // Black elegant shirt
-			10414   // Black elegant legs
-		);
-
-		// White elegant
-		addVariantGroup(
-			10416,  // White elegant blouse
-			10418   // White elegant skirt
-		);
-
-		// Purple elegant
-		addVariantGroup(
-			12319,  // Purple elegant shirt
-			12321,  // Purple elegant legs
-			12315   // Purple elegant skirt
-		);
-
-		// Pink elegant
-		addVariantGroup(
-			12323,  // Pink elegant shirt
-			12325,  // Pink elegant legs
-			12317   // Pink elegant skirt
-		);
-
-		// Gold elegant
-		addVariantGroup(
-			12347,  // Gold elegant shirt
-			12349,  // Gold elegant legs
-			12351   // Gold elegant skirt
+		group("Black wizard robe", "BLACK_WIZARDS_ROBE",
+			ItemID.BLACK_WIZARDS_ROBE_TRIM,                          // Black wizard robe (t)
+			ItemID.BLACK_WIZARDS_ROBE_GOLD                           // Black wizard robe (g)
 		);
 
 		// ==================== SPIRIT ANGLER OUTFIT ====================
 
-		// Angler hat / Spirit angler headband
-		addVariantGroup(
-			13258,  // Angler hat
-			25592   // Spirit angler headband
+		group("Angler hat and Spirit angler headband", "ANGLER_HAT|TRAWLER_REWARD_HAT",
+			ItemID.TRAWLER_REWARD_HAT,                               // Angler hat
+			ItemID.SPIRIT_ANGLER_HAT                                 // Spirit angler headband
 		);
 
-		// Angler top / Spirit angler top
-		addVariantGroup(
-			13259,  // Angler top
-			25594   // Spirit angler top
+		group("Angler top and Spirit angler top", "ANGLER_TOP|TRAWLER_REWARD_TOP",
+			ItemID.TRAWLER_REWARD_TOP,                               // Angler top
+			ItemID.SPIRIT_ANGLER_TOP                                 // Spirit angler top
 		);
 
-		// Angler waders / Spirit angler waders
-		addVariantGroup(
-			13260,  // Angler waders
-			25596   // Spirit angler waders
+		group("Angler waders and Spirit angler waders", "ANGLER_LEGS|TRAWLER_REWARD_LEGS",
+			ItemID.TRAWLER_REWARD_LEGS,                              // Angler waders
+			ItemID.SPIRIT_ANGLER_LEGS                                // Spirit angler waders
 		);
 
-		// Angler boots / Spirit angler boots
-		addVariantGroup(
-			13261,  // Angler boots
-			25598   // Spirit angler boots
+		group("Angler boots and Spirit angler boots", "ANGLER_BOOTS|TRAWLER_REWARD_BOOTS",
+			ItemID.TRAWLER_REWARD_BOOTS,                             // Angler boots
+			ItemID.SPIRIT_ANGLER_BOOTS                               // Spirit angler boots
 		);
 
 		// ==================== DRAGON WARHAMMER ====================
 
-		addVariantGroup(
-			13576,  // Dragon warhammer
-			28035   // Dragon warhammer (cr)
+		group("Dragon warhammer", "DRAGON_WARHAMMER",
+			ItemID.DRAGON_WARHAMMER,                                 // Dragon warhammer
+			ItemID.BH_DRAGON_WARHAMMER_CORRUPTED                     // Dragon warhammer (cr)
 		);
 
 		// ==================== DRAGON CLAWS ====================
 
-		addVariantGroup(
-			13652,  // Dragon claws
-			28039   // Dragon claws (cr)
+		group("Dragon claws", "DRAGON_CLAWS",
+			ItemID.DRAGON_CLAWS,                                     // Dragon claws
+			ItemID.BH_DRAGON_CLAWS_CORRUPTED                         // Dragon claws (cr)
 		);
 
 		// ==================== GHOMMAL'S HILT (COMBAT ACHIEVEMENTS) ====================
 
-		addVariantGroup(
-			25926,  // Ghommal's hilt 1
-			25928,  // Ghommal's hilt 2
-			25930,  // Ghommal's hilt 3
-			25932,  // Ghommal's hilt 4
-			25934,  // Ghommal's hilt 5
-			25936   // Ghommal's hilt 6
-		);
-
-		// ==================== DIZANA'S QUIVER ====================
-
-		addVariantGroup(
-			28947,  // Dizana's quiver (uncharged)
-			28951   // Dizana's quiver
+		group("Ghommal's hilt 1", "CA_OFFHAND",
+			ItemID.CA_OFFHAND_EASY,                                  // Ghommal's hilt 1
+			ItemID.CA_OFFHAND_MEDIUM,                                // Ghommal's hilt 2
+			ItemID.CA_OFFHAND_HARD,                                  // Ghommal's hilt 3
+			ItemID.CA_OFFHAND_ELITE,                                 // Ghommal's hilt 4
+			ItemID.CA_OFFHAND_MASTER,                                // Ghommal's hilt 5
+			ItemID.CA_OFFHAND_GRANDMASTER                            // Ghommal's hilt 6
 		);
 
 		// ==================== QUEST POINT CAPE ====================
 
-		addVariantGroup(
-			9813,   // Quest point cape
-			13068   // Quest point cape (t)
+		group("Quest point cape", "SKILLCAPE_QP",
+			ItemID.SKILLCAPE_QP,                                     // Quest point cape
+			ItemID.SKILLCAPE_QP_TRIMMED                              // Quest point cape (t)
 		);
 
 		// ==================== MUSIC CAPE ====================
 
-		addVariantGroup(
-			13221,  // Music cape
-			13222   // Music cape (t)
+		group("Music cape", "MUSIC_CAPE",
+			ItemID.MUSIC_CAPE,                                       // Music cape
+			ItemID.MUSIC_CAPE_TRIMMED                                // Music cape(t)
 		);
 
 		// ==================== ABYSSAL LANTERN ====================
 
-		addVariantGroup(
-			26822,  // Abyssal lantern (empty)
-			26824,  // Abyssal lantern (normal logs)
-			26826,  // Abyssal lantern (blue logs)
-			26828,  // Abyssal lantern (red logs)
-			26830,  // Abyssal lantern (white logs)
-			26832,  // Abyssal lantern (purple logs)
-			26834,  // Abyssal lantern (green logs)
-			26836,  // Abyssal lantern (oak logs)
-			26838,  // Abyssal lantern (willow logs)
-			26840,  // Abyssal lantern (maple logs)
-			26842,  // Abyssal lantern (yew logs)
-			26844,  // Abyssal lantern (blisterwood logs)
-			26846,  // Abyssal lantern (magic logs)
-			26848   // Abyssal lantern (redwood logs)
+		group("Abyssal lantern", "ABYSSAL_LANTERN",
+			ItemID.ABYSSAL_LANTERN,                                  // Abyssal lantern
+			ItemID.ABYSSAL_LANTERN_NORMAL,                           // Abyssal lantern (normal logs)
+			ItemID.ABYSSAL_LANTERN_NORMAL_BLUE,                      // Abyssal lantern (blue logs)
+			ItemID.ABYSSAL_LANTERN_NORMAL_RED,                       // Abyssal lantern (red logs)
+			ItemID.ABYSSAL_LANTERN_NORMAL_WHITE,                     // Abyssal lantern (white logs)
+			ItemID.ABYSSAL_LANTERN_NORMAL_PURPLE,                    // Abyssal lantern (purple logs)
+			ItemID.ABYSSAL_LANTERN_NORMAL_GREEN,                     // Abyssal lantern (green logs)
+			ItemID.ABYSSAL_LANTERN_OAK,                              // Abyssal lantern (oak logs)
+			ItemID.ABYSSAL_LANTERN_WILLOW,                           // Abyssal lantern (willow logs)
+			ItemID.ABYSSAL_LANTERN_MAPLE,                            // Abyssal lantern (maple logs)
+			ItemID.ABYSSAL_LANTERN_YEW,                              // Abyssal lantern (yew logs)
+			ItemID.ABYSSAL_LANTERN_BLISTERWOOD,                      // Abyssal lantern (blisterwood logs)
+			ItemID.ABYSSAL_LANTERN_MAGIC,                            // Abyssal lantern (magic logs)
+			ItemID.ABYSSAL_LANTERN_REDWOOD                           // Abyssal lantern (redwood logs)
 		);
 
 		// ==================== HAT OF THE EYE ====================
 
-		addVariantGroup(
-			26850,  // Hat of the eye
-			26858,  // Hat of the eye (red)
-			26864,  // Hat of the eye (green)
-			26870   // Hat of the eye (blue)
-		);
-
-		// ==================== AVA'S DEVICES ====================
-
-		addVariantGroup(
-			10499,  // Ava's accumulator
-			22109,  // Ava's assembler
-			27374   // Masori assembler
+		group("Hat of the Eye", "HAT_OF_THE_EYE",
+			ItemID.HAT_OF_THE_EYE,                                   // Hat of the Eye
+			ItemID.HAT_OF_THE_EYE_RED,                               // Hat of the Eye (red)
+			ItemID.HAT_OF_THE_EYE_GREEN,                             // Hat of the Eye (green)
+			ItemID.HAT_OF_THE_EYE_BLUE                               // Hat of the Eye (blue)
 		);
 
 		// ==================== SKILL CAPES (UNTRIMMED/TRIMMED) ====================
 
-		addVariantGroup(
-			9747,   // Attack cape
-			9748    // Attack cape (t)
+		group("Attack cape", "SKILLCAPE_ATTACK",
+			ItemID.SKILLCAPE_ATTACK,                                 // Attack cape
+			ItemID.SKILLCAPE_ATTACK_TRIMMED                          // Attack cape(t)
 		);
 
-		addVariantGroup(
-			9750,   // Strength cape
-			9751    // Strength cape (t)
+		group("Strength cape", "SKILLCAPE_STRENGTH",
+			ItemID.SKILLCAPE_STRENGTH,                               // Strength cape
+			ItemID.SKILLCAPE_STRENGTH_TRIMMED                        // Strength cape(t)
 		);
 
-		addVariantGroup(
-			9753,   // Defence cape
-			9754    // Defence cape (t)
+		group("Defence cape", "SKILLCAPE_DEFENCE",
+			ItemID.SKILLCAPE_DEFENCE,                                // Defence cape
+			ItemID.SKILLCAPE_DEFENCE_TRIMMED                         // Defence cape(t)
 		);
 
-		addVariantGroup(
-			9756,   // Ranged cape
-			9757    // Ranged cape (t)
+		group("Prayer cape", "SKILLCAPE_PRAYER",
+			ItemID.SKILLCAPE_PRAYER,                                 // Prayer cape
+			ItemID.SKILLCAPE_PRAYER_TRIMMED                          // Prayer cape(t)
 		);
 
-		addVariantGroup(
-			9759,   // Prayer cape
-			9760    // Prayer cape (t)
+		group("Magic cape", "SKILLCAPE_MAGIC",
+			ItemID.SKILLCAPE_MAGIC,                                  // Magic cape
+			ItemID.SKILLCAPE_MAGIC_TRIMMED                           // Magic cape(t)
 		);
 
-		addVariantGroup(
-			9762,   // Magic cape
-			9763    // Magic cape (t)
+		group("Runecraft cape", "SKILLCAPE_RUNECRAFTING",
+			ItemID.SKILLCAPE_RUNECRAFTING,                           // Runecraft cape
+			ItemID.SKILLCAPE_RUNECRAFTING_TRIMMED                    // Runecraft cape(t)
 		);
 
-		addVariantGroup(
-			9765,   // Runecraft cape
-			9766    // Runecraft cape (t)
+		group("Hitpoints cape", "SKILLCAPE_HITPOINTS",
+			ItemID.SKILLCAPE_HITPOINTS,                              // Hitpoints cape
+			ItemID.SKILLCAPE_HITPOINTS_TRIMMED                       // Hitpoints cape(t)
 		);
 
-		addVariantGroup(
-			9768,   // Hitpoints cape
-			9769    // Hitpoints cape (t)
+		group("Agility cape", "SKILLCAPE_AGILITY",
+			ItemID.SKILLCAPE_AGILITY,                                // Agility cape
+			ItemID.SKILLCAPE_AGILITY_TRIMMED                         // Agility cape(t)
 		);
 
-		addVariantGroup(
-			9771,   // Agility cape
-			9772    // Agility cape (t)
+		group("Herblore cape", "SKILLCAPE_HERBLORE",
+			ItemID.SKILLCAPE_HERBLORE,                               // Herblore cape
+			ItemID.SKILLCAPE_HERBLORE_TRIMMED                        // Herblore cape(t)
 		);
 
-		addVariantGroup(
-			9774,   // Herblore cape
-			9775    // Herblore cape (t)
+		group("Thieving cape", "SKILLCAPE_THIEVING",
+			ItemID.SKILLCAPE_THIEVING,                               // Thieving cape
+			ItemID.SKILLCAPE_THIEVING_TRIMMED                        // Thieving cape(t)
 		);
 
-		addVariantGroup(
-			9777,   // Thieving cape
-			9778    // Thieving cape (t)
+		group("Crafting cape", "SKILLCAPE_CRAFTING",
+			ItemID.SKILLCAPE_CRAFTING,                               // Crafting cape
+			ItemID.SKILLCAPE_CRAFTING_TRIMMED                        // Crafting cape(t)
 		);
 
-		addVariantGroup(
-			9780,   // Crafting cape
-			9781    // Crafting cape (t)
+		group("Fletching cape", "SKILLCAPE_FLETCHING",
+			ItemID.SKILLCAPE_FLETCHING,                              // Fletching cape
+			ItemID.SKILLCAPE_FLETCHING_TRIMMED                       // Fletching cape(t)
 		);
 
-		addVariantGroup(
-			9783,   // Fletching cape
-			9784    // Fletching cape (t)
+		group("Slayer cape", "SKILLCAPE_SLAYER",
+			ItemID.SKILLCAPE_SLAYER,                                 // Slayer cape
+			ItemID.SKILLCAPE_SLAYER_TRIMMED                          // Slayer cape(t)
 		);
 
-		addVariantGroup(
-			9786,   // Slayer cape
-			9787    // Slayer cape (t)
+		group("Mining cape", "SKILLCAPE_MINING",
+			ItemID.SKILLCAPE_MINING,                                 // Mining cape
+			ItemID.SKILLCAPE_MINING_TRIMMED                          // Mining cape(t)
 		);
 
-		addVariantGroup(
-			9789,   // Construction cape
-			9790    // Construction cape (t)
+		group("Smithing cape", "SKILLCAPE_SMITHING",
+			ItemID.SKILLCAPE_SMITHING,                               // Smithing cape
+			ItemID.SKILLCAPE_SMITHING_TRIMMED                        // Smithing cape(t)
 		);
 
-		addVariantGroup(
-			9792,   // Mining cape
-			9793    // Mining cape (t)
+		group("Fishing cape", "SKILLCAPE_FISHING",
+			ItemID.SKILLCAPE_FISHING,                                // Fishing cape
+			ItemID.SKILLCAPE_FISHING_TRIMMED                         // Fishing cape(t)
 		);
 
-		addVariantGroup(
-			9795,   // Smithing cape
-			9796    // Smithing cape (t)
+		group("Cooking cape", "SKILLCAPE_COOKING",
+			ItemID.SKILLCAPE_COOKING,                                // Cooking cape
+			ItemID.SKILLCAPE_COOKING_TRIMMED                         // Cooking cape(t)
 		);
 
-		addVariantGroup(
-			9798,   // Fishing cape
-			9799    // Fishing cape (t)
+		group("Firemaking cape", "SKILLCAPE_FIREMAKING",
+			ItemID.SKILLCAPE_FIREMAKING,                             // Firemaking cape
+			ItemID.SKILLCAPE_FIREMAKING_TRIMMED                      // Firemaking cape(t)
 		);
 
-		addVariantGroup(
-			9801,   // Cooking cape
-			9802    // Cooking cape (t)
+		group("Farming cape", "SKILLCAPE_FARMING",
+			ItemID.SKILLCAPE_FARMING,                                // Farming cape
+			ItemID.SKILLCAPE_FARMING_TRIMMED                         // Farming cape(t)
 		);
 
-		addVariantGroup(
-			9804,   // Firemaking cape
-			9805    // Firemaking cape (t)
+		group("Hunter cape", "SKILLCAPE_HUNTING",
+			ItemID.SKILLCAPE_HUNTING,                                // Hunter cape
+			ItemID.SKILLCAPE_HUNTING_TRIMMED                         // Hunter cape(t)
 		);
 
-		addVariantGroup(
-			9807,   // Woodcutting cape
-			9808    // Woodcutting cape (t)
+		// ==================== GRACEFUL OUTFIT ====================
+
+		group("Graceful hood", "GRACEFUL_HOOD",
+			ItemID.GRACEFUL_HOOD,                                    // Graceful hood
+			ItemID.ZEAH_GRACEFUL_HOOD_ARCEUUS,                       // Graceful hood
+			ItemID.ZEAH_GRACEFUL_HOOD_PISCARILIUS,                   // Graceful hood
+			ItemID.ZEAH_GRACEFUL_HOOD_LOVAKENGJ,                     // Graceful hood
+			ItemID.ZEAH_GRACEFUL_HOOD_SHAYZIEN,                      // Graceful hood
+			ItemID.ZEAH_GRACEFUL_HOOD_HOSIDIUS,                      // Graceful hood
+			ItemID.ZEAH_GRACEFUL_HOOD_KOUREND,                       // Graceful hood
+			ItemID.GRACEFUL_HOOD_SKILLCAPECOLOUR,                    // Graceful hood
+			ItemID.GRACEFUL_HOOD_HALLOWED,                           // Graceful hood
+			ItemID.GRACEFUL_HOOD_TRAILBLAZER,                        // Graceful hood
+			ItemID.GRACEFUL_HOOD_ADVENTURER,                         // Graceful hood
+			ItemID.GRACEFUL_HOOD_WYRM                                // Graceful hood
 		);
 
-		addVariantGroup(
-			9810,   // Farming cape
-			9811    // Farming cape (t)
+		group("Graceful cape", "GRACEFUL_CAPE",
+			ItemID.GRACEFUL_CAPE,                                    // Graceful cape
+			ItemID.ZEAH_GRACEFUL_CAPE_ARCEUUS,                       // Graceful cape
+			ItemID.ZEAH_GRACEFUL_CAPE_PISCARILIUS,                   // Graceful cape
+			ItemID.ZEAH_GRACEFUL_CAPE_LOVAKENGJ,                     // Graceful cape
+			ItemID.ZEAH_GRACEFUL_CAPE_SHAYZIEN,                      // Graceful cape
+			ItemID.ZEAH_GRACEFUL_CAPE_HOSIDIUS,                      // Graceful cape
+			ItemID.ZEAH_GRACEFUL_CAPE_KOUREND,                       // Graceful cape
+			ItemID.GRACEFUL_CAPE_SKILLCAPECOLOUR,                    // Graceful cape
+			ItemID.GRACEFUL_CAPE_HALLOWED,                           // Graceful cape
+			ItemID.GRACEFUL_CAPE_TRAILBLAZER,                        // Graceful cape
+			ItemID.GRACEFUL_CAPE_ADVENTURER,                         // Graceful cape
+			ItemID.GRACEFUL_CAPE_WYRM                                // Graceful cape
 		);
 
-		addVariantGroup(
-			9948,   // Hunter cape
-			9949    // Hunter cape (t)
+		group("Graceful top", "GRACEFUL_TOP",
+			ItemID.GRACEFUL_TOP,                                     // Graceful top
+			ItemID.ZEAH_GRACEFUL_TOP_ARCEUUS,                        // Graceful top
+			ItemID.ZEAH_GRACEFUL_TOP_PISCARILIUS,                    // Graceful top
+			ItemID.ZEAH_GRACEFUL_TOP_LOVAKENGJ,                      // Graceful top
+			ItemID.ZEAH_GRACEFUL_TOP_SHAYZIEN,                       // Graceful top
+			ItemID.ZEAH_GRACEFUL_TOP_HOSIDIUS,                       // Graceful top
+			ItemID.ZEAH_GRACEFUL_TOP_KOUREND,                        // Graceful top
+			ItemID.GRACEFUL_TOP_SKILLCAPECOLOUR,                     // Graceful top
+			ItemID.GRACEFUL_TOP_HALLOWED,                            // Graceful top
+			ItemID.GRACEFUL_TOP_TRAILBLAZER,                         // Graceful top
+			ItemID.GRACEFUL_TOP_ADVENTURER,                          // Graceful top
+			ItemID.GRACEFUL_TOP_WYRM                                 // Graceful top
+		);
+
+		group("Graceful legs", "GRACEFUL_LEGS",
+			ItemID.GRACEFUL_LEGS,                                    // Graceful legs
+			ItemID.ZEAH_GRACEFUL_LEGS_ARCEUUS,                       // Graceful legs
+			ItemID.ZEAH_GRACEFUL_LEGS_PISCARILIUS,                   // Graceful legs
+			ItemID.ZEAH_GRACEFUL_LEGS_LOVAKENGJ,                     // Graceful legs
+			ItemID.ZEAH_GRACEFUL_LEGS_SHAYZIEN,                      // Graceful legs
+			ItemID.ZEAH_GRACEFUL_LEGS_HOSIDIUS,                      // Graceful legs
+			ItemID.ZEAH_GRACEFUL_LEGS_KOUREND,                       // Graceful legs
+			ItemID.GRACEFUL_LEGS_SKILLCAPECOLOUR,                    // Graceful legs
+			ItemID.GRACEFUL_LEGS_HALLOWED,                           // Graceful legs
+			ItemID.GRACEFUL_LEGS_TRAILBLAZER,                        // Graceful legs
+			ItemID.GRACEFUL_LEGS_ADVENTURER,                         // Graceful legs
+			ItemID.GRACEFUL_LEGS_WYRM                                // Graceful legs
+		);
+
+		group("Graceful gloves", "GRACEFUL_GLOVES",
+			ItemID.GRACEFUL_GLOVES,                                  // Graceful gloves
+			ItemID.ZEAH_GRACEFUL_GLOVES_ARCEUUS,                     // Graceful gloves
+			ItemID.ZEAH_GRACEFUL_GLOVES_PISCARILIUS,                 // Graceful gloves
+			ItemID.ZEAH_GRACEFUL_GLOVES_LOVAKENGJ,                   // Graceful gloves
+			ItemID.ZEAH_GRACEFUL_GLOVES_SHAYZIEN,                    // Graceful gloves
+			ItemID.ZEAH_GRACEFUL_GLOVES_HOSIDIUS,                    // Graceful gloves
+			ItemID.ZEAH_GRACEFUL_GLOVES_KOUREND,                     // Graceful gloves
+			ItemID.GRACEFUL_GLOVES_SKILLCAPECOLOUR,                  // Graceful gloves
+			ItemID.GRACEFUL_GLOVES_HALLOWED,                         // Graceful gloves
+			ItemID.GRACEFUL_GLOVES_TRAILBLAZER,                      // Graceful gloves
+			ItemID.GRACEFUL_GLOVES_ADVENTURER,                       // Graceful gloves
+			ItemID.GRACEFUL_GLOVES_WYRM                              // Graceful gloves
+		);
+
+		group("Graceful boots", "GRACEFUL_BOOTS",
+			ItemID.GRACEFUL_BOOTS,                                   // Graceful boots
+			ItemID.ZEAH_GRACEFUL_BOOTS_ARCEUUS,                      // Graceful boots
+			ItemID.ZEAH_GRACEFUL_BOOTS_PISCARILIUS,                  // Graceful boots
+			ItemID.ZEAH_GRACEFUL_BOOTS_LOVAKENGJ,                    // Graceful boots
+			ItemID.ZEAH_GRACEFUL_BOOTS_SHAYZIEN,                     // Graceful boots
+			ItemID.ZEAH_GRACEFUL_BOOTS_HOSIDIUS,                     // Graceful boots
+			ItemID.ZEAH_GRACEFUL_BOOTS_KOUREND,                      // Graceful boots
+			ItemID.GRACEFUL_BOOTS_SKILLCAPECOLOUR,                   // Graceful boots
+			ItemID.GRACEFUL_BOOTS_HALLOWED,                          // Graceful boots
+			ItemID.GRACEFUL_BOOTS_TRAILBLAZER,                       // Graceful boots
+			ItemID.GRACEFUL_BOOTS_ADVENTURER,                        // Graceful boots
+			ItemID.GRACEFUL_BOOTS_WYRM                               // Graceful boots
+		);
+
+		// ==================== SLAYER HELMETS ====================
+
+		group("Slayer helmet (all colours and imbued versions)", "SLAYER_HELM",
+			ItemID.SLAYER_HELM,                                      // Slayer helmet
+			ItemID.SLAYER_HELM_I,                                    // Slayer helmet (i)
+			ItemID.SLAYER_HELM_BLACK,                                // Black slayer helmet
+			ItemID.SLAYER_HELM_I_BLACK,                              // Black slayer helmet (i)
+			ItemID.SLAYER_HELM_GREEN,                                // Green slayer helmet
+			ItemID.SLAYER_HELM_I_GREEN,                              // Green slayer helmet (i)
+			ItemID.SLAYER_HELM_RED,                                  // Red slayer helmet
+			ItemID.SLAYER_HELM_I_RED,                                // Red slayer helmet (i)
+			ItemID.SLAYER_HELM_PURPLE,                               // Purple slayer helmet
+			ItemID.SLAYER_HELM_I_PURPLE,                             // Purple slayer helmet (i)
+			ItemID.SLAYER_HELM_TURQUOISE,                            // Turquoise slayer helmet
+			ItemID.SLAYER_HELM_I_TURQUOISE,                          // Turquoise slayer helmet (i)
+			ItemID.SLAYER_HELM_HYDRA,                                // Hydra slayer helmet
+			ItemID.SLAYER_HELM_I_HYDRA,                              // Hydra slayer helmet (i)
+			ItemID.SLAYER_HELM_TWISTED,                              // Twisted slayer helmet
+			ItemID.SLAYER_HELM_I_TWISTED,                            // Twisted slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I,                                 // Slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_BLACK,                           // Black slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_GREEN,                           // Green slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_RED,                             // Red slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_PURPLE,                          // Purple slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_TURQUOISE,                       // Turquoise slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_HYDRA,                           // Hydra slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_TWISTED,                         // Twisted slayer helmet (i)
+			ItemID.SLAYER_HELM_JAD,                                  // Tztok slayer helmet
+			ItemID.SLAYER_HELM_I_JAD,                                // Tztok slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_JAD,                             // Tztok slayer helmet (i)
+			ItemID.SLAYER_HELM_VERZIK,                               // Vampyric slayer helmet
+			ItemID.SLAYER_HELM_I_VERZIK,                             // Vampyric slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_VERZIK,                          // Vampyric slayer helmet (i)
+			ItemID.SLAYER_HELM_ZUK,                                  // Tzkal slayer helmet
+			ItemID.SLAYER_HELM_I_ZUK,                                // Tzkal slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_ZUK,                             // Tzkal slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I,                               // Slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_BLACK,                         // Black slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_GREEN,                         // Green slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_RED,                           // Red slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_PURPLE,                        // Purple slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_TURQUOISE,                     // Turquoise slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_HYDRA,                         // Hydra slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_TWISTED,                       // Twisted slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_JAD,                           // Tztok slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_VERZIK,                        // Vampyric slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_ZUK,                           // Tzkal slayer helmet (i)
+			ItemID.SLAYER_HELM_ARAXYTE,                              // Araxyte slayer helmet
+			ItemID.SLAYER_HELM_I_ARAXYTE,                            // Araxyte slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_ARAXYTE,                         // Araxyte slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_ARAXYTE,                       // Araxyte slayer helmet (i)
+			ItemID.SLAYER_HELM_HOODED,                               // Hooded slayer helmet
+			ItemID.SLAYER_HELM_I_HOODED,                             // Hooded slayer helmet (i)
+			ItemID.SW_SLAYER_HELM_I_HOODED,                          // Hooded slayer helmet (i)
+			ItemID.PVPA_SLAYER_HELM_I_HOODED,                        // Hooded slayer helmet (i)
+			ItemID.LEAGUE_6_SLAYER_HELM1,                            // Oathplate slayer helmet
+			ItemID.LEAGUE_6_SLAYER_HELM2,                            // Radiant slayer helmet
+			ItemID.LEAGUE_6_SLAYER_HELM1_I,                          // Oathplate slayer helmet (i)
+			ItemID.SW_LEAGUE_6_SLAYER_HELM1_I,                       // Oathplate slayer helmet (i)
+			ItemID.PVPA_LEAGUE_6_SLAYER_HELM1_I,                     // Oathplate slayer helmet (i)
+			ItemID.LEAGUE_6_SLAYER_HELM2_I,                          // Radiant slayer helmet (i)
+			ItemID.SW_LEAGUE_6_SLAYER_HELM2_I,                       // Radiant slayer helmet (i)
+			ItemID.PVPA_LEAGUE_6_SLAYER_HELM2_I                      // Radiant slayer helmet (i)
+		);
+
+		// ==================== VOID KNIGHT EQUIPMENT ====================
+
+		group("Void knight top", "VOID_KNIGHT_TOP",
+			ItemID.PEST_VOID_KNIGHT_TOP,                             // Void knight top
+			ItemID.ELITE_VOID_KNIGHT_TOP,                            // Elite void top
+			ItemID.PEST_VOID_KNIGHT_TOP_TROUVER,                     // Void knight top (l)
+			ItemID.ELITE_VOID_KNIGHT_TOP_TROUVER,                    // Elite void top (l)
+			ItemID.LEAGUE_3_VOID_KNIGHT_TOP,                         // Void knight top (or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_TOP_ELITE,                   // Elite void top (or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_TOP_TROUVER,                 // Void knight top (l)(or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_TOP_ELITE_TROUVER            // Elite void top (l)(or)
+		);
+
+		group("Void knight robe", "VOID_KNIGHT_ROBES",
+			ItemID.PEST_VOID_KNIGHT_ROBES,                           // Void knight robe
+			ItemID.ELITE_VOID_KNIGHT_ROBES,                          // Elite void robe
+			ItemID.PEST_VOID_KNIGHT_ROBES_TROUVER,                   // Void knight robe (l)
+			ItemID.ELITE_VOID_KNIGHT_ROBES_TROUVER,                  // Elite void robe (l)
+			ItemID.LEAGUE_3_VOID_KNIGHT_ROBES,                       // Void knight robe (or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_ROBES_ELITE,                 // Elite void robe (or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_ROBES_TROUVER,               // Void knight robe (l)(or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_ROBES_ELITE_TROUVER          // Elite void robe (l)(or)
+		);
+
+		group("Void knight gloves", "VOID_KNIGHT_GLOVES",
+			ItemID.PEST_VOID_KNIGHT_GLOVES,                          // Void knight gloves
+			ItemID.PEST_VOID_KNIGHT_GLOVES_TROUVER,                  // Void knight gloves (l)
+			ItemID.LEAGUE_3_VOID_KNIGHT_GLOVES,                      // Void knight gloves (or)
+			ItemID.LEAGUE_3_VOID_KNIGHT_GLOVES_TROUVER               // Void knight gloves (l)(or)
+		);
+
+		group("Void mage helm", "MAGE_HELM",
+			ItemID.GAME_PEST_MAGE_HELM,                              // Void mage helm
+			ItemID.GAME_PEST_MAGE_HELM_TROUVER,                      // Void mage helm (l)
+			ItemID.LEAGUE_3_VOID_MAGE_HELM,                          // Void mage helm (or)
+			ItemID.LEAGUE_3_VOID_MAGE_HELM_TROUVER                   // Void mage helm (l)(or)
+		);
+
+		group("Void ranger helm", "ARCHER_HELM|RANGE_HELM",
+			ItemID.GAME_PEST_ARCHER_HELM,                            // Void ranger helm
+			ItemID.GAME_PEST_ARCHER_HELM_TROUVER,                    // Void ranger helm (l)
+			ItemID.LEAGUE_3_VOID_RANGE_HELM,                         // Void ranger helm (or)
+			ItemID.LEAGUE_3_VOID_RANGE_HELM_TROUVER                  // Void ranger helm (l)(or)
+		);
+
+		group("Void melee helm", "MELEE_HELM",
+			ItemID.GAME_PEST_MELEE_HELM,                             // Void melee helm
+			ItemID.GAME_PEST_MELEE_HELM_TROUVER,                     // Void melee helm (l)
+			ItemID.LEAGUE_3_VOID_MELEE_HELM,                         // Void melee helm (or)
+			ItemID.LEAGUE_3_VOID_MELEE_HELM_TROUVER                  // Void melee helm (l)(or)
+		);
+
+		// ==================== LEAGUES REWARDS ====================
+
+		group("Twisted relic hunter hat (t1-t3)", "RELIC_HUNTER",
+			ItemID.TWISTED_RELIC_HUNTER_HAT_T3,                      // Twisted hat (t3)
+			ItemID.TWISTED_RELIC_HUNTER_HAT_T2,                      // Twisted hat (t2)
+			ItemID.TWISTED_RELIC_HUNTER_HAT_T1                       // Twisted hat (t1)
+		);
+
+		group("Twisted relic hunter top (t1-t3)", "RELIC_HUNTER",
+			ItemID.TWISTED_RELIC_HUNTER_TOP_T3,                      // Twisted coat (t3)
+			ItemID.TWISTED_RELIC_HUNTER_TOP_T2,                      // Twisted coat (t2)
+			ItemID.TWISTED_RELIC_HUNTER_TOP_T1                       // Twisted coat (t1)
+		);
+
+		group("Twisted relic hunter legs (t1-t3)", "RELIC_HUNTER",
+			ItemID.TWISTED_RELIC_HUNTER_LEGS_T3,                     // Twisted trousers (t3)
+			ItemID.TWISTED_RELIC_HUNTER_LEGS_T2,                     // Twisted trousers (t2)
+			ItemID.TWISTED_RELIC_HUNTER_LEGS_T1                      // Twisted trousers (t1)
+		);
+
+		group("Twisted relic hunter boots (t1-t3)", "RELIC_HUNTER",
+			ItemID.TWISTED_RELIC_HUNTER_BOOTS_T3,                    // Twisted boots (t3)
+			ItemID.TWISTED_RELIC_HUNTER_BOOTS_T2,                    // Twisted boots (t2)
+			ItemID.TWISTED_RELIC_HUNTER_BOOTS_T1                     // Twisted boots (t1)
+		);
+
+		group("Trailblazer relic hunter hat (t1-t3)", "RELIC_HUNTER",
+			ItemID.TRAILBLAZER_RELIC_HUNTER_HOOD_T3,                 // Trailblazer hood (t3)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_HOOD_T2,                 // Trailblazer hood (t2)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_HOOD_T1                  // Trailblazer hood (t1)
+		);
+
+		group("Trailblazer relic hunter top (t1-t3)", "RELIC_HUNTER",
+			ItemID.TRAILBLAZER_RELIC_HUNTER_TOP_T3,                  // Trailblazer top (t3)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_TOP_T2,                  // Trailblazer top (t2)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_TOP_T1                   // Trailblazer top (t1)
+		);
+
+		group("Trailblazer relic hunter legs (t1-t3)", "RELIC_HUNTER",
+			ItemID.TRAILBLAZER_RELIC_HUNTER_LEGS_T3,                 // Trailblazer trousers (t3)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_LEGS_T2,                 // Trailblazer trousers (t2)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_LEGS_T1                  // Trailblazer trousers (t1)
+		);
+
+		group("Trailblazer relic hunter boots (t1-t3)", "RELIC_HUNTER",
+			ItemID.TRAILBLAZER_RELIC_HUNTER_BOOTS_T3,                // Trailblazer boots (t3)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_BOOTS_T2,                // Trailblazer boots (t2)
+			ItemID.TRAILBLAZER_RELIC_HUNTER_BOOTS_T1                 // Trailblazer boots (t1)
+		);
+
+		group("Shattered relic hunter hat (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_3_RELIC_HUNTER_HOOD_T1,                    // Shattered hood (t1)
+			ItemID.LEAGUE_3_RELIC_HUNTER_HOOD_T2,                    // Shattered hood (t2)
+			ItemID.LEAGUE_3_RELIC_HUNTER_HOOD_T3                     // Shattered hood (t3)
+		);
+
+		group("Shattered relic hunter top (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_3_RELIC_HUNTER_TOP_T1,                     // Shattered top (t1)
+			ItemID.LEAGUE_3_RELIC_HUNTER_TOP_T2,                     // Shattered top (t2)
+			ItemID.LEAGUE_3_RELIC_HUNTER_TOP_T3                      // Shattered top (t3)
+		);
+
+		group("Shattered relic hunter legs (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_3_RELIC_HUNTER_LEGS_T1,                    // Shattered trousers (t1)
+			ItemID.LEAGUE_3_RELIC_HUNTER_LEGS_T2,                    // Shattered trousers (t2)
+			ItemID.LEAGUE_3_RELIC_HUNTER_LEGS_T3                     // Shattered trousers (t3)
+		);
+
+		group("Shattered relic hunter boots (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_3_RELIC_HUNTER_BOOTS_T1,                   // Shattered boots (t1)
+			ItemID.LEAGUE_3_RELIC_HUNTER_BOOTS_T2,                   // Shattered boots (t2)
+			ItemID.LEAGUE_3_RELIC_HUNTER_BOOTS_T3                    // Shattered boots (t3)
+		);
+
+		group("Trailblazer reloaded relic hunter hat (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_4_RELIC_HUNTER_HAT_T1,                     // Trailblazer reloaded headband (t1)
+			ItemID.LEAGUE_4_RELIC_HUNTER_HAT_T2,                     // Trailblazer reloaded headband (t2)
+			ItemID.LEAGUE_4_RELIC_HUNTER_HAT_T3                      // Trailblazer reloaded headband (t3)
+		);
+
+		group("Trailblazer reloaded relic hunter top (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_4_RELIC_HUNTER_TOP_T1,                     // Trailblazer reloaded top (t1)
+			ItemID.LEAGUE_4_RELIC_HUNTER_TOP_T2,                     // Trailblazer reloaded top (t2)
+			ItemID.LEAGUE_4_RELIC_HUNTER_TOP_T3                      // Trailblazer reloaded top (t3)
+		);
+
+		group("Trailblazer reloaded relic hunter legs (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_4_RELIC_HUNTER_LEGS_T1,                    // Trailblazer reloaded trousers (t1)
+			ItemID.LEAGUE_4_RELIC_HUNTER_LEGS_T2,                    // Trailblazer reloaded trousers (t2)
+			ItemID.LEAGUE_4_RELIC_HUNTER_LEGS_T3                     // Trailblazer reloaded trousers (t3)
+		);
+
+		group("Trailblazer reloaded relic hunter boots (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_4_RELIC_HUNTER_BOOTS_T1,                   // Trailblazer reloaded boots (t1)
+			ItemID.LEAGUE_4_RELIC_HUNTER_BOOTS_T2,                   // Trailblazer reloaded boots (t2)
+			ItemID.LEAGUE_4_RELIC_HUNTER_BOOTS_T3                    // Trailblazer reloaded boots (t3)
+		);
+
+		group("Raging echoes relic hunter hat (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE5_RELIC_HUNTER_HAT_T1,                      // Raging echoes hat (t1)
+			ItemID.LEAGUE5_RELIC_HUNTER_HAT_T2,                      // Raging echoes hat (t2)
+			ItemID.LEAGUE5_RELIC_HUNTER_HAT_T3                       // Raging echoes hat (t3)
+		);
+
+		group("Raging echoes relic hunter top (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE5_RELIC_HUNTER_TOP_T1,                      // Raging echoes top (t1)
+			ItemID.LEAGUE5_RELIC_HUNTER_TOP_T2,                      // Raging echoes top (t2)
+			ItemID.LEAGUE5_RELIC_HUNTER_TOP_T3                       // Raging echoes top (t3)
+		);
+
+		group("Raging echoes relic hunter legs (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE5_RELIC_HUNTER_LEGS_T1,                     // Raging echoes robeskirt (t1)
+			ItemID.LEAGUE5_RELIC_HUNTER_LEGS_T2,                     // Raging echoes robeskirt (t2)
+			ItemID.LEAGUE5_RELIC_HUNTER_LEGS_T3                      // Raging echoes robeskirt (t3)
+		);
+
+		group("Raging echoes relic hunter boots (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE5_RELIC_HUNTER_BOOTS_T1,                    // Raging echoes boots (t1)
+			ItemID.LEAGUE5_RELIC_HUNTER_BOOTS_T2,                    // Raging echoes boots (t2)
+			ItemID.LEAGUE5_RELIC_HUNTER_BOOTS_T3                     // Raging echoes boots (t3)
+		);
+
+		group("Demonic relic hunter hat (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_6_RELIC_HUNTER_HOOD_T1,                    // Demonic hood (t1)
+			ItemID.LEAGUE_6_RELIC_HUNTER_HOOD_T2,                    // Demonic hood (t2)
+			ItemID.LEAGUE_6_RELIC_HUNTER_HOOD_T3                     // Demonic hood (t3)
+		);
+
+		group("Demonic relic hunter top (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_6_RELIC_HUNTER_TOP_T1,                     // Demonic robe top (t1)
+			ItemID.LEAGUE_6_RELIC_HUNTER_TOP_T2,                     // Demonic robe top (t2)
+			ItemID.LEAGUE_6_RELIC_HUNTER_TOP_T3                      // Demonic robe top (t3)
+		);
+
+		group("Demonic relic hunter legs (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_6_RELIC_HUNTER_LEGS_T1,                    // Demonic robe bottom (t1)
+			ItemID.LEAGUE_6_RELIC_HUNTER_LEGS_T2,                    // Demonic robe bottom (t2)
+			ItemID.LEAGUE_6_RELIC_HUNTER_LEGS_T3                     // Demonic robe bottom (t3)
+		);
+
+		group("Demonic relic hunter boots (t1-t3)", "RELIC_HUNTER",
+			ItemID.LEAGUE_6_RELIC_HUNTER_BOOTS_T1,                   // Demonic boots (t1)
+			ItemID.LEAGUE_6_RELIC_HUNTER_BOOTS_T2,                   // Demonic boots (t2)
+			ItemID.LEAGUE_6_RELIC_HUNTER_BOOTS_T3                    // Demonic boots (t3)
+		);
+
+		group("League canes", "CANE",
+			ItemID.TWISTED_CANE,                                     // Twisted cane
+			ItemID.TRAILBLAZER_CANE,                                 // Trailblazer cane
+			ItemID.LEAGUE_3_CANE,                                    // Shattered cane
+			ItemID.LEAGUE5_RELIC_HUNTER_CANE                         // Raging echoes cane
+		);
+
+		// ==================== CASTLE WARS DECORATIVE ====================
+
+		group("Decorative sword", "CASTLEWARS_SWORD",
+			ItemID.CASTLEWARS_SWORD,                                 // Decorative sword
+			ItemID.CASTLEWARS_SWORD_2,                               // Decorative sword
+			ItemID.CASTLEWARS_SWORD_3,                               // Decorative sword
+			ItemID.CASTLEWARS_SWORD_3_TROUVER                        // Decorative sword (l)
+		);
+
+		group("Decorative armour body", "CASTLEWARS_ARMOUR_BODY",
+			ItemID.CASTLEWARS_ARMOUR_BODY,                           // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_BODY_2,                         // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_BODY_3,                         // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_BODY_3_TROUVER                  // Decorative armour (l)
+		);
+
+		group("Decorative armour legs", "CASTLEWARS_ARMOUR_LEGS",
+			ItemID.CASTLEWARS_ARMOUR_LEGS,                           // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_LEGS_2,                         // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_LEGS_3,                         // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_LEGS_3_TROUVER                  // Decorative armour (l)
+		);
+
+		group("Decorative armour skirt", "CASTLEWARS_ARMOUR_SKIRT",
+			ItemID.CASTLEWARS_ARMOUR_SKIRT,                          // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_SKIRT_2,                        // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_SKIRT_3,                        // Decorative armour
+			ItemID.CASTLEWARS_ARMOUR_SKIRT_3_TROUVER                 // Decorative armour (l)
+		);
+
+		group("Decorative med helm", "CASTLEWARS_MED_HELM",
+			ItemID.CASTLEWARS_MED_HELM,                              // Decorative helm
+			ItemID.CASTLEWARS_MED_HELM_2,                            // Decorative helm
+			ItemID.CASTLEWARS_MED_HELM_3,                            // Decorative helm
+			ItemID.CASTLEWARS_MED_HELM_3_TROUVER                     // Decorative helm (l)
+		);
+
+		group("Decorative shield", "CASTLEWARS_SHIELD",
+			ItemID.CASTLEWARS_SHIELD,                                // Decorative shield
+			ItemID.CASTLEWARS_SHIELD_2,                              // Decorative shield
+			ItemID.CASTLEWARS_SHIELD_3,                              // Decorative shield
+			ItemID.CASTLEWARS_SHIELD_3_TROUVER                       // Decorative shield (l)
+		);
+
+		group("Decorative boots", "CASTLEWARS_BOOTS",
+			ItemID.CASTLEWARS_BOOTS,                                 // Decorative boots
+			ItemID.CASTLEWARS_BOOTS_2,                               // Decorative boots
+			ItemID.CASTLEWARS_BOOTS_3,                               // Decorative boots
+			ItemID.CASTLEWARS_BOOTS_3_TROUVER                        // Decorative boots (l)
+		);
+
+		group("Decorative full helm", "CASTLEWARS_FULL_HELM",
+			ItemID.CASTLEWARS_FULL_HELM,                             // Decorative full helm
+			ItemID.CASTLEWARS_FULL_HELM_2,                           // Decorative full helm
+			ItemID.CASTLEWARS_FULL_HELM_3,                           // Decorative full helm
+			ItemID.CASTLEWARS_FULL_HELM_3_TROUVER                    // Decorative full helm (l)
+		);
+
+		// ==================== SHAYZIEN ARMOUR ====================
+
+		group("Shayzien helm (1-5)", "SHAYZIEN_HELM",
+			ItemID.SHAYZIEN_HELM_1,                                  // Shayzien helm (1)
+			ItemID.SHAYZIEN_HELM_2,                                  // Shayzien helm (2)
+			ItemID.SHAYZIEN_HELM_3,                                  // Shayzien helm (3)
+			ItemID.SHAYZIEN_HELM_4,                                  // Shayzien helm (4)
+			ItemID.SHAYZIEN_HELM_5                                   // Shayzien helm (5)
+		);
+
+		group("Shayzien body (1-5)", "SHAYZIEN_BODY",
+			ItemID.SHAYZIEN_BODY_1,                                  // Shayzien platebody (1)
+			ItemID.SHAYZIEN_BODY_2,                                  // Shayzien platebody (2)
+			ItemID.SHAYZIEN_BODY_3,                                  // Shayzien platebody (3)
+			ItemID.SHAYZIEN_BODY_4,                                  // Shayzien platebody (4)
+			ItemID.SHAYZIEN_BODY_5                                   // Shayzien body (5)
+		);
+
+		group("Shayzien legs (1-5)", "SHAYZIEN_LEGS",
+			ItemID.SHAYZIEN_LEGS_1,                                  // Shayzien greaves (1)
+			ItemID.SHAYZIEN_LEGS_2,                                  // Shayzien greaves (2)
+			ItemID.SHAYZIEN_LEGS_3,                                  // Shayzien greaves (3)
+			ItemID.SHAYZIEN_LEGS_4,                                  // Shayzien greaves (4)
+			ItemID.SHAYZIEN_LEGS_5                                   // Shayzien greaves (5)
+		);
+
+		group("Shayzien gloves (1-5)", "SHAYZIEN_GLOVES",
+			ItemID.SHAYZIEN_GLOVES_1,                                // Shayzien gloves (1)
+			ItemID.SHAYZIEN_GLOVES_2,                                // Shayzien gloves (2)
+			ItemID.SHAYZIEN_GLOVES_3,                                // Shayzien gloves (3)
+			ItemID.SHAYZIEN_GLOVES_4,                                // Shayzien gloves (4)
+			ItemID.SHAYZIEN_GLOVES_5                                 // Shayzien gloves (5)
+		);
+
+		group("Shayzien boots (1-5)", "SHAYZIEN_BOOTS",
+			ItemID.SHAYZIEN_BOOTS_1,                                 // Shayzien boots (1)
+			ItemID.SHAYZIEN_BOOTS_2,                                 // Shayzien boots (2)
+			ItemID.SHAYZIEN_BOOTS_3,                                 // Shayzien boots (3)
+			ItemID.SHAYZIEN_BOOTS_4,                                 // Shayzien boots (4)
+			ItemID.SHAYZIEN_BOOTS_5                                  // Shayzien boots (5)
+		);
+
+		// ==================== POTIONS ====================
+
+		group("Blighted super restore", "2RESTORE",
+			ItemID.BLIGHTED_4DOSE2RESTORE,                           // Blighted super restore(4)
+			ItemID.BLIGHTED_3DOSE2RESTORE,                           // Blighted super restore(3)
+			ItemID.BLIGHTED_2DOSE2RESTORE,                           // Blighted super restore(2)
+			ItemID.BLIGHTED_1DOSE2RESTORE                            // Blighted super restore(1)
+		);
+
+		// ==================== HOLIDAY ITEMS ====================
+
+		group("H'ween masks", "HALLOWEENMASK",
+			ItemID.HALLOWEENMASK_GREEN,                              // Green halloween mask
+			ItemID.HALLOWEENMASK_BLUE,                               // Blue halloween mask
+			ItemID.HALLOWEENMASK_RED,                                // Red halloween mask
+			ItemID.HALLOWEENMASK_BLACK                               // Black h'ween mask
+		);
+
+		// ==================== SKILL CAPES ====================
+
+		group("Ranging cape", "SKILLCAPE_RANGING",
+			ItemID.SKILLCAPE_RANGING,                                // Ranging cape
+			ItemID.SKILLCAPE_RANGING_TRIMMED                         // Ranging cape(t)
+		);
+
+		group("Construction cape", "SKILLCAPE_CONSTRUCTION",
+			ItemID.SKILLCAPE_CONSTRUCTION,                           // Construct. cape
+			ItemID.SKILLCAPE_CONSTRUCTION_TRIMMED                    // Construct. cape(t)
+		);
+
+		group("Woodcutting cape", "SKILLCAPE_WOODCUTTING",
+			ItemID.SKILLCAPE_WOODCUTTING,                            // Woodcutting cape
+			ItemID.SKILLCAPE_WOODCUTTING_TRIMMED                     // Woodcut. cape(t)
+		);
+
+		// ==================== CAPES ====================
+
+		group("Fire cape, Infernal cape and their max capes", "CAPE_FIRE|FIRECAPE|INFERNAL",
+			ItemID.TZHAAR_CAPE_FIRE,                                 // Fire cape
+			ItemID.TZHAAR_CAPE_FIRE_TROUVER,                         // Fire cape (l)
+			ItemID.SKILLCAPE_MAX_FIRECAPE,                           // Fire max cape
+			ItemID.SKILLCAPE_MAX_INFERNALCAPE,                       // Infernal max cape
+			ItemID.INFERNAL_CAPE,                                    // Infernal cape
+			ItemID.SKILLCAPE_MAX_INFERNALCAPE_TROUVER,               // Infernal max cape (l)
+			ItemID.SKILLCAPE_MAX_FIRECAPE_TROUVER,                   // Fire max cape (l)
+			ItemID.INFERNAL_CAPE_TROUVER                             // Infernal cape (l)
+		);
+
+		group("Max cape and god max capes", "SKILLCAPE_MAX",
+			ItemID.SKILLCAPE_MAX,                                    // Max cape
+			ItemID.SKILLCAPE_MAX_SARADOMIN,                          // Saradomin max cape
+			ItemID.SKILLCAPE_MAX_ZAMORAK,                            // Zamorak max cape
+			ItemID.SKILLCAPE_MAX_GUTHIX,                             // Guthix max cape
+			ItemID.SKILLCAPE_MAX_SARADOMIN2,                         // Imbued Saradomin max cape
+			ItemID.SKILLCAPE_MAX_ZAMORAK2,                           // Imbued Zamorak max cape
+			ItemID.SKILLCAPE_MAX_GUTHIX2,                            // Imbued Guthix max cape
+			ItemID.SKILLCAPE_MAX_SARADOMIN2_TROUVER,                 // Imbued Saradomin max cape (l)
+			ItemID.SKILLCAPE_MAX_ZAMORAK2_TROUVER,                   // Imbued Zamorak max cape (l)
+			ItemID.SKILLCAPE_MAX_GUTHIX2_TROUVER                     // Imbued Guthix max cape (l)
+		);
+
+		group("Ava's accumulator, assembler and Masori assembler", "AVAS_|ANMA_50",
+			ItemID.ANMA_50_REWARD,                                   // Ava's accumulator
+			ItemID.AVAS_ASSEMBLER,                                   // Ava's assembler
+			ItemID.AVAS_ASSEMBLER_TROUVER,                           // Ava's assembler (l)
+			ItemID.AVAS_ASSEMBLER_MASORI,                            // Masori assembler
+			ItemID.AVAS_ASSEMBLER_MASORI_TROUVER                     // Masori assembler (l)
+		);
+
+		group("Accumulator and assembler max capes", "SKILLCAPE_MAX_A",
+			ItemID.SKILLCAPE_MAX_ANMA,                               // Accumulator max cape
+			ItemID.SKILLCAPE_MAX_ASSEMBLER,                          // Assembler max cape
+			ItemID.SKILLCAPE_MAX_ASSEMBLER_TROUVER,                  // Assembler max cape (l)
+			ItemID.SKILLCAPE_MAX_ASSEMBLER_MASORI,                   // Masori assembler max cape
+			ItemID.SKILLCAPE_MAX_ASSEMBLER_MASORI_TROUVER            // Masori assembler max cape (l)
+		);
+
+		group("Dizana's quiver and Blessed Dizana's quiver", "DIZANAS_QUIVER",
+			ItemID.DIZANAS_QUIVER_UNCHARGED,                         // Dizana's quiver (uncharged)
+			ItemID.DIZANAS_QUIVER_UNCHARGED_TROUVER,                 // Dizana's quiver (l) (uncharged)
+			ItemID.DIZANAS_QUIVER_CHARGED,                           // Dizana's quiver
+			ItemID.DIZANAS_QUIVER_CHARGED_TROUVER,                   // Dizana's quiver (l)
+			ItemID.DIZANAS_QUIVER_INFINITE,                          // Blessed Dizana's quiver
+			ItemID.DIZANAS_QUIVER_INFINITE_TROUVER                   // Blessed Dizana's quiver (l)
+		);
+
+		// ==================== MISC ====================
+
+		group("Rune pouch and Divine rune pouch", "RUNE_POUCH",
+			ItemID.BH_RUNE_POUCH,                                    // Rune pouch
+			ItemID.BH_RUNE_POUCH_TROUVER,                            // Rune pouch (l)
+			ItemID.DIVINE_RUNE_POUCH,                                // Divine rune pouch
+			ItemID.DIVINE_RUNE_POUCH_TROUVER                         // Divine rune pouch (l)
+		);
+
+		// ==================== CRYSTAL EQUIPMENT ====================
+
+		group("Crystal helm", "CRYSTAL_HELMET",
+			ItemID.CRYSTAL_HELMET,                                   // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE,                          // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_HEFIN,                             // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_HEFIN,                    // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_ITHELL,                            // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_ITHELL,                   // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_IORWERTH,                          // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_IORWERTH,                 // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_TRAHAEARN,                         // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_TRAHAEARN,                // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_CADARN,                            // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_CADARN,                   // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_CRWYS,                             // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_CRWYS,                    // Crystal helm (inactive)
+			ItemID.CRYSTAL_HELMET_AMLODD,                            // Crystal helm
+			ItemID.CRYSTAL_HELMET_INACTIVE_AMLODD                    // Crystal helm (inactive)
+		);
+
+		group("Crystal body", "CRYSTAL_CHESTPLATE",
+			ItemID.CRYSTAL_CHESTPLATE,                               // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE,                      // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_HEFIN,                         // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_HEFIN,                // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_ITHELL,                        // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_ITHELL,               // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_IORWERTH,                      // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_IORWERTH,             // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_TRAHAEARN,                     // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_TRAHAEARN,            // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_CADARN,                        // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_CADARN,               // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_CRWYS,                         // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_CRWYS,                // Crystal body (inactive)
+			ItemID.CRYSTAL_CHESTPLATE_AMLODD,                        // Crystal body
+			ItemID.CRYSTAL_CHESTPLATE_INACTIVE_AMLODD                // Crystal body (inactive)
+		);
+
+		group("Crystal legs", "CRYSTAL_PLATELEGS",
+			ItemID.CRYSTAL_PLATELEGS,                                // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE,                       // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_HEFIN,                          // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_HEFIN,                 // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_ITHELL,                         // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_ITHELL,                // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_IORWERTH,                       // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_IORWERTH,              // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_TRAHAEARN,                      // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_TRAHAEARN,             // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_CADARN,                         // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_CADARN,                // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_CRWYS,                          // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_CRWYS,                 // Crystal legs (inactive)
+			ItemID.CRYSTAL_PLATELEGS_AMLODD,                         // Crystal legs
+			ItemID.CRYSTAL_PLATELEGS_INACTIVE_AMLODD                 // Crystal legs (inactive)
+		);
+
+		// ==================== OATHPLATE ====================
+
+		group("Oathplate helm and Radiant oathplate helm", "OATHPLATE_HELM",
+			ItemID.OATHPLATE_HELM,                                   // Oathplate helm
+			ItemID.RADIANT_OATHPLATE_HELM                            // Radiant oathplate helm
+		);
+
+		group("Oathplate chest and Radiant oathplate chest", "OATHPLATE_CHEST",
+			ItemID.OATHPLATE_CHEST,                                  // Oathplate chest
+			ItemID.RADIANT_OATHPLATE_CHEST                           // Radiant oathplate chest
+		);
+
+		group("Oathplate legs and Radiant oathplate legs", "OATHPLATE_LEGS",
+			ItemID.OATHPLATE_LEGS,                                   // Oathplate legs
+			ItemID.RADIANT_OATHPLATE_LEGS                            // Radiant oathplate legs
+		);
+
+		// ==================== ORNAMENT KITS ====================
+
+		group("Soulreaper axe", "SOULREAPER",
+			ItemID.SOULREAPER,                                       // Soulreaper axe
+			ItemID.SOULREAPER_AXE_ORN                                // Soulreaper axe (o)
+		);
+
+		group("Iban's staff", "IBAN",
+			ItemID.IBANSTAFF,                                        // Iban's staff
+			ItemID.IBANSTAFF_UPGRADED,                               // Iban's staff (u)
+			ItemID.IBAN_STAFF_ORN,                                   // Iban's staff (o)
+			ItemID.IBAN_STAFF_UPGRADED_ORN                           // Iban's staff (u) (o)
+		);
+
+		// ==================== BLOWPIPES ====================
+
+		group("Blowpipes", "BLOWPIPE",
+			ItemID.TOXIC_BLOWPIPE,                                   // Toxic blowpipe (empty)
+			ItemID.TOXIC_BLOWPIPE_LOADED,                            // Toxic blowpipe
+			ItemID.TOXIC_BLOWPIPE_LOADED_ORNAMENT,                   // Blazing blowpipe
+			ItemID.DRYGORE_BLOWPIPE_LOADED,                          // Drygore blowpipe
+			ItemID.CAMPHOR_BLOWPIPE,                                 // Camphor blowpipe
+			ItemID.IRONWOOD_BLOWPIPE,                                // Ironwood blowpipe
+			ItemID.ROSEWOOD_BLOWPIPE                                 // Rosewood blowpipe
+		);
+
+		// ==================== BOSS DROPS ====================
+
+		group("Avernic defender", "INFERNAL_DEFENDER",
+			ItemID.INFERNAL_DEFENDER,                                // Avernic defender
+			ItemID.INFERNAL_DEFENDER_TROUVER                         // Avernic defender (l)
 		);
 	}
 
 	/**
-	 * Add a group of item IDs that should be treated as equivalent.
+	 * Add a group of item IDs that should be treated as versions of one item.
+	 *
+	 * @param label    readable name of the group
+	 * @param keywords "|"-separated fragments; every constant name in the group must contain one (checked by tests)
+	 * @param itemIds  the item IDs
 	 */
-	public void addVariantGroup(int... itemIds)
+	private void group(String label, String keywords, int... itemIds)
 	{
-		Set<Integer> group = new HashSet<>();
+		Set<Integer> group = new LinkedHashSet<>();
 		for (int id : itemIds)
 		{
 			group.add(id);
 		}
+		Set<Integer> readOnly = Collections.unmodifiableSet(group);
 
-		// Map each item to this group
 		for (int id : itemIds)
 		{
-			itemToGroup.put(id, group);
+			if (itemToGroup.containsKey(id))
+			{
+				throw new IllegalStateException("Item " + id + " is in more than one variant group (" + label + ")");
+			}
+			itemToGroup.put(id, readOnly);
+			itemToLabel.put(id, label);
 		}
 
-		variantGroups.add(group);
+		variantGroups.add(readOnly);
 	}
 
 	/**
@@ -3657,6 +2945,14 @@ public class ItemVariantMapping
 	}
 
 	/**
+	 * Get the readable label of the group an item belongs to, or null.
+	 */
+	public String getGroupLabel(int itemId)
+	{
+		return itemToLabel.get(itemId);
+	}
+
+	/**
 	 * Check if two items are variants of each other.
 	 */
 	public boolean areVariants(int itemId1, int itemId2)
@@ -3670,7 +2966,7 @@ public class ItemVariantMapping
 	 */
 	public List<Set<Integer>> getAllVariantGroups()
 	{
-		return variantGroups;
+		return Collections.unmodifiableList(variantGroups);
 	}
 
 	/**

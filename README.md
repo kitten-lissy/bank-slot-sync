@@ -1,207 +1,95 @@
 # Bank Slot Sync
 
-A RuneLite plugin that automatically syncs item variants (recolors, ornament kits, charged items, degraded equipment) to their corresponding Bank Tag Layout slots.
+A RuneLite plugin that keeps your Bank Tag layouts and tags in step when you swap an item for another version of it: a recolour, an ornament kit, an imbue, a locked (l) copy, or an upgrade such as Oathplate to Radiant oathplate.
 
-## The Problem
+## What it does
 
-When you modify an item in Old School RuneScape, it often gets a completely new item ID:
-- Adding an ornament kit to your Dragon scimitar
-- Recoloring your Graceful outfit
-- Charging/discharging jewelry
-- Barrows equipment degrading
-- Imbuing rings at NMZ or Soul Wars
+Many items get a new item ID when you change them. RuneLite's Bank Tags already draws a lot of recolours in the slot of the original item, but the saved layout and the item's tags still point at the old ID. Bank Slot Sync fixes that when the new version reaches your bank:
 
-This breaks your carefully organized Bank Tag Layouts because the layout system doesn't recognize the "new" item as belonging in the old slot. You end up with placeholders and items appearing at the end of your tabs.
+1. It notices a new version of an item it knows about.
+2. If the old version is gone (not in your bank, inventory or equipment), it gives the new version the old one's bank tags and puts it in the old one's layout slot.
+3. It posts one chat message saying what changed, for example: `Bank Slot Sync: Hallowed graceful top replaced Graceful top in agility, skilling. Type ::bss undo to revert.`
 
-## The Solution
+It leaves a layout alone when:
 
-Bank Slot Sync automatically detects when you acquire a variant of an item already in your layouts and updates the layout accordingly. It:
+- the new item is already somewhere in that layout (for example a tab that holds every slayer helmet colour on purpose),
+- the tab is on your "Never Touch These Tabs" list,
+- you still have the old version in your bank, inventory or equipment (unless you ask it to insert next to it).
 
-1. **Detects variant items** when they appear in your bank
-2. **Copies tags** from the old item to the new variant
-3. **Updates layouts** to place the new item in the correct position
-4. **Removes old tags** to prevent placeholder clutter
+The first time you open your bank after logging in or hopping, the plugin only records what is there. It never treats your whole bank as new.
 
-## Important Usage Tip
+## Chat commands
 
-**For best results, deposit items when you're NOT viewing a tag tab.** The plugin works most reliably when you deposit from the main bank view rather than while browsing a specific tag. The plugin will warn you if you deposit while in a tag view.
+| Command | What it does |
+|--------|--------------|
+| `::bss undo` | Reverts the last sync (layouts and tags). Repeat to go further back, up to 10 syncs. |
+| `::bss apply` | In "Ask first" mode, applies the change the plugin offered. |
 
-## Configuration Options
+These commands stay in your client and are never sent to the game.
 
-### Main Settings
+## Settings
 
-| Option | Default | Description |
+### General
+
+| Option | Default | What it does |
 |--------|---------|-------------|
-| **Enable Plugin** | On | Toggle the entire plugin on/off |
-| **Layout Mode** | Replace | How to position the new variant (see below) |
-| **Copy Tags to Variants** | On | Copy bank tags from old item to new variant |
-| **Remove Tags from Old Item** | On | Remove tags from old item to prevent placeholders |
-| **Show Chat Notifications** | On | Display messages when variants are synced |
+| **Sync Mode** | Automatic | Automatic, Ask first (post a chat message and wait for `::bss apply`), or Off |
+| **Layout Mode** | Replace original slot | Replace original slot, or Place next to original (shifts that row only up to the first gap) |
+| **Copy Tags to New Version** | On | Gives the new version the tags the old one had |
+| **Remove Tags from Old Item** | Off | Takes the copied tags off the old version. Other tags stay. |
+| **Never Touch These Tabs** | (empty) | Comma-separated tab names the plugin must not change |
+| **Show Chat Notifications** | On | One chat message per sync |
 
-### Layout Modes Explained
+### Advanced
 
-| Mode | Behavior |
-|------|----------|
-| **Replace** | New variant takes the exact position of the old item. Best for 1:1 item swaps. |
-| **Adjacent** | New variant is inserted next to the old item. Only shifts items on the same row - other rows are unaffected. |
-
-### Advanced Settings
-
-| Option | Default | Description |
+| Option | Default | What it does |
 |--------|---------|-------------|
-| **Detect Charge Variants** | On | Auto-detect charged items (jewelry, barrows, tridents) as variants |
-| **Debug Logging** | Off | Show detailed debug messages in chat for troubleshooting |
+| **Insert When You Keep Both** | Off | With Replace, still insert the new version next to the old one when you have both |
+| **Detect Charge Variants** | Off | Also treat items RuneLite counts as the same item with different charges or degradation (jewellery charges, Barrows degradation) as versions of each other. Potions are always ignored. |
 
-## How It Works
+## Supported items
 
-### Scenario 1: Swapping Items (Most Common)
-You remove the old item and deposit the new variant:
-1. Plugin detects the new variant in your bank
-2. Finds the old variant's position in your tag layouts
-3. Places the new item based on your Layout Mode setting
-4. Optionally copies tags and removes old item's tags
+Around 380 groups and 1,460 item IDs. Every ID is written as a RuneLite `ItemID` constant and checked by a unit test, so a group can only hold the item it is named after. Highlights:
 
-### Scenario 2: Both Items in Bank
-You have both the old and new variant in your bank:
-- **Replace Mode**: No action (keeps your existing layout)
-- **Adjacent Mode**: Inserts new variant next to the original
+- **Graceful**: all 12 versions of each piece (default, the five Kourend houses, Kourend, Agility Arena, Hallowed, Trailblazer, Adventurer, Varlamore)
+- **Slayer helmets**: every colour, including Araxyte, Hooded, Oathplate and Radiant, with all imbued copies (Nightmare Zone, Soul Wars, Emir's Arena)
+- **Upgrade chains**: Oathplate to Radiant oathplate, Torva to Sanguine torva, Amulet of fury to Amulet of blood fury, Void to Elite void, Ava's assembler to Masori assembler, Dizana's quiver to Blessed Dizana's quiver, Fire cape to Infernal cape and their max capes, Rune pouch to Divine rune pouch
+- **Ornament kits**: godswords, dragon armour (g), zenyte jewellery (or), Bandos and Armadyl (or), Elder chaos (or), Soulreaper axe (o), Iban's staff (o), tridents (o), Abyssal whip and tentacle (or), and more
+- **Charges and degradation**: teleport jewellery, Barrows, tridents, blowpipes (Toxic, Blazing, Drygore, Ironwood, Rosewood, Camphor), Serpentine helms, Scythe of vitur, Sanguinesti staff
+- **Locked (l) copies** of Void, Fighter torso, defenders, capes and more
+- **Crystal armour** with all elven clan recolours
+- **Treasure Trails**: trimmed and gold-trimmed armour, god and gilded rune armour, heraldic helms and shields, trimmed dragonhide and wizard robes
+- **Leagues**: relic hunter outfits for each league (one group per piece, tiers 1 to 3), league canes and banners
+- **Castle Wars** decorative armour, **Shayzien** armour tiers, achievement diary items, skill capes and their trimmed versions
 
-## Supported Item Variants
-
-The plugin includes **300+ variant groups** covering thousands of items:
-
-### Cosmetic Variants
-- **Graceful Outfit** - All 11 recolors (Default, Arceuus, Piscarilius, Lovakengj, Shayzien, Hosidius, Kourend, Agility Arena, Hallowed, Trailblazer, Varlamore)
-- **Slayer Helmets** - All colors (Black, Green, Red, Purple, Turquoise, Hydra, Twisted, Tztok, Vampyric, Tzkal) + all imbue sources
-- **Void Knight Equipment** - Regular, Elite, and all ornament kit variants
-- **Infinity Robes** - Regular, Dark, and Light variants
-- **Ancestral Robes** - Regular and Twisted variants
-
-### Ornament Kits
-- **Godswords** - All (or) variants (AGS, BGS, SGS, ZGS, Ancient)
-- **Dragon Equipment** - Scimitar, defender, boots, chainbody, platebody, full helm, platelegs, plateskirt, sq shield, kiteshield
-- **Jewelry** - Fury, Torture, Anguish, Tormented bracelet, Occult necklace, Berserker necklace
-- **Weapons** - Granite maul, Steam/Lava battlestaff, Odium/Malediction ward, and many more
-- **Theatre of Blood** - Holy/Sanguine Scythe, Holy Sanguinesti staff, Holy Ghrazi rapier
-- **Tombs of Amascut** - Osmumten's fang (or), Elidinis' ward (or), Masori (f) variants
-- **GWD Armour** - Bandos, Armadyl, and all (or) variants
-- **Spirit Shields** - Spectral, Arcane, Elysian + (or) variants
-
-### Charged/Uncharged Items
-- **Teleport Jewelry** - All charge levels for: Ring of dueling, Combat bracelet, Skills necklace, Games necklace, Amulet of glory, Necklace of passage, Burning amulet, Digsite pendant, Ring of returning
-- **Barrows Equipment** - All degradation states (0/25/50/75/100) for all 6 brothers
-- **Tridents** - Seas and Swamp variants, charged and uncharged
-- **Blowpipe** - Empty, charged, and Blazing variants
-- **Serpentine Helms** - Regular, Tanzanite, Magma (charged and uncharged)
-- **Dragonfire Shields** - DFS, Ward, Ancient Wyvern (charged and uncharged)
-- **Tomes** - Fire and Water (empty and charged)
-
-### Tools
-- **Dragon Pickaxe** - Regular, (or), Infernal, Crystal, Gilded, Trailblazer variants
-- **Dragon Axe** - Regular, (or), Infernal, Crystal, Gilded, Trailblazer variants
-- **Dragon Harpoon** - Regular, (or), Infernal, Crystal, Trailblazer variants
-
-### Rings
-- **Fremennik Rings** - Berserker, Archers, Seers, Warrior + all imbue sources
-- **Wilderness Rings** - Treasonous, Tyrannical, Ring of the gods + imbued
-- **Ring of Suffering** - Regular, imbued, recoil variants
-- **Slayer Rings** - All 8 charge levels
-
-### Achievement Diary Items
-- All 12 regions with tiers 1-4: Explorer's ring, Ardougne cloak, Desert amulet, Falador shield, Fremennik sea boots, Kandarin headgear, Karamja gloves, Morytania legs, Varrock armour, Western banner, Wilderness sword, Rada's blessing
-
-### Leagues Rewards
-- **Relic Hunter Outfits** - All 5 leagues (Twisted, Trailblazer, Shattered, Reloaded, Raging Echoes) with T1/T2/T3 variants
-- **Canes & Banners** - All league variants
-- **Tool Ornament Kits** - Trailblazer variants
-- **Shattered Relics** - Void, Mystic, Cannon ornament kits
-- **Raging Echoes** - Echo Ahrim's, Echo Virtus, Echo Venator bow
-
-### Castle Wars
-- **Decorative Armour** - Red, White, and Gold tiers for all pieces (melee, magic, ranged)
-
-### Shayzien Armour
-- All 5 tiers for helm, body, greaves, gloves, boots
-
-### Treasure Trails
-- **Trimmed Armour** - Bronze through Rune (t) and (g) variants
-- **God Armour** - All 6 gods (Saradomin, Zamorak, Guthix, Ancient, Armadyl, Bandos)
-- **Gilded Armour** - Full set including weapons and tools
-- **3rd Age** - Melee, Range, Mage, Druidic sets + weapons and tools
-- **Blessed D'hide** - All 6 god variants
-- **Heraldic Armour** - H1-H5 for Black, Adamant, Rune
-
-### Misc
-- **Max Capes** - All god variants, Assembler, Infernal, Mythical
-- **God Capes** - Regular and Imbued (Sara, Zammy, Guthix)
-- **Black Masks** - All charge levels + imbued variants
-- **Crystal Equipment** - Bow, Shield, Halberd (active/inactive/new)
-- **Blade of Saeldor / Bow of Faerdhinen** - All color variants
-- **Holiday Items** - Partyhats, H'ween masks, Santa hats
-
-### Auto-Detected Charge Variants
-
-The plugin can also automatically detect charge variants by pattern matching item names, including:
-- Items with `(1)` through `(8)` charges
-- Items with `(full)`, `(empty)`, `(charged)`, `(uncharged)`
-- Barrows degradation percentages
-
-## Installation
-
-### Plugin Hub (Recommended)
-*Coming soon* - Submit to RuneLite Plugin Hub
-
-### Manual Installation
-1. Clone or download this repository
-2. Build with `./gradlew build`
-3. Copy the JAR from `build/libs/` to your RuneLite plugins folder
-
-## Building from Source
-
-```bash
-# Build the plugin
-./gradlew build
-
-# Run RuneLite with the plugin (development)
-./gradlew run
-```
+Groups only hold versions that go in the same slot. A Saradomin d'hide body and Saradomin chaps are never treated as versions of each other.
 
 ## Compatibility
 
-- Works with the built-in **Bank Tags** plugin
-- Works with the external **Bank Tag Layouts** plugin
-- Automatically detects which layout format is being used
+Works with RuneLite's built-in **Bank Tags** plugin, using only the services it shares with other plugins. Layout and tag changes go through Bank Tags itself, so they also work while a tag tab is open.
 
 ## Troubleshooting
 
-**Variants not being detected?**
-- Enable "Debug Logging" in the Advanced settings
-- Check the chat for debug messages
-- Make sure the item is in our variant mapping (open an issue if missing)
+**A swap was not picked up.**
+Make sure the old version was not still in your inventory or equipment when you deposited the new one. If the item is missing from the list, please open an issue with both item names.
 
-**Layout not updating correctly?**
-- Deposit items from the main bank view, not while viewing a tag tab
-- The plugin waits briefly before updating to avoid conflicts with Bank Tags
+**Something moved that should not have.**
+Type `::bss undo`. Add the tab to "Never Touch These Tabs" if you want the plugin to leave it alone.
 
-**Old item showing as placeholder?**
-- Make sure "Remove Tags from Old Item" is enabled
-- This removes the old item's tags so it won't appear in tag tabs
+**Nothing changes at all.**
+Check that Sync Mode is not Off and that the tab has a layout. The plugin only edits existing layouts; it never creates one.
 
-**Layout not updating at all?**
-- Make sure you have a layout enabled for the tag tab
-- The plugin only updates existing layouts, it doesn't create new ones
+## Building from source
 
-## Contributing
-
-Found an item variant that's not supported? Please open an issue with:
-- The item names (old and new)
-- The item IDs if known (can find on OSRS Wiki)
+```bash
+./gradlew build
+```
 
 ## License
 
-BSD 2-Clause License - see LICENSE file for details.
+BSD 2-Clause License, see the LICENSE file.
 
 ## Credits
 
-- Item IDs sourced from the [Old School RuneScape Wiki](https://oldschool.runescape.wiki)
+- Item names checked against the [Old School RuneScape Wiki](https://oldschool.runescape.wiki)
 - Built for [RuneLite](https://runelite.net)
